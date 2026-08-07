@@ -10,11 +10,17 @@ import type {
 	OWForecastResponse,
 } from "../dtos/openWeather.dto.js";
 
+const FORECAST_WINDOW = 24;
+
+const round2 = (num: number) => {
+	return Number(num.toFixed(2));
+};
+
 const mapToForecast = (forecast: OWForecastResponse): HourlyForecastPoint[] =>
-	forecast.list.map((point) => ({
+	forecast.list.slice(0, FORECAST_WINDOW).map((point) => ({
 		timestamp: point.dt,
 		temp: point.main.temp,
-		precipitationProbability: point.pop * 100,
+		precipitationProbability: round2(point.pop * 100),
 	}));
 
 const calculateMaxPrecipChance = (forecast: OWForecastResponse) => {
@@ -23,13 +29,14 @@ const calculateMaxPrecipChance = (forecast: OWForecastResponse) => {
 	}
 
 	const pops = forecast.list
+		.slice(0, FORECAST_WINDOW)
 		.map((el) => el.pop)
 		.filter((pop): pop is number => typeof pop === "number");
 
 	if (pops.length === 0) {
 		return null;
 	}
-	return Math.max(...pops) * 100;
+	return round2(Math.max(...pops) * 100);
 };
 
 const calculateAvgPrecipChance = (forecast: OWForecastResponse) => {
@@ -38,6 +45,7 @@ const calculateAvgPrecipChance = (forecast: OWForecastResponse) => {
 	}
 
 	const pops = forecast.list
+		.slice(0, FORECAST_WINDOW)
 		.map((el) => el.pop)
 		.filter((el) => typeof el === "number");
 
@@ -46,7 +54,7 @@ const calculateAvgPrecipChance = (forecast: OWForecastResponse) => {
 	}
 
 	const sum = pops.reduce((acc, pop) => acc + pop, 0);
-	return (sum / pops.length) * 100;
+	return round2((sum / pops.length) * 100);
 };
 
 const mapToAirPollution = (
@@ -56,7 +64,7 @@ const mapToAirPollution = (
 		return null;
 	}
 
-	return airPollution.list.map((point) => ({
+	return airPollution.list.slice(0, FORECAST_WINDOW).map((point) => ({
 		timestamp: point.dt,
 		aqi: point.main.aqi,
 	}));
@@ -68,6 +76,7 @@ const calculateAvgAirQuality = (airQuality: OWAirPollutionResponse | null) => {
 	}
 
 	const aqis = airQuality.list
+		.slice(0, FORECAST_WINDOW)
 		.map((el) => el.main.aqi)
 		.filter((el) => typeof el === "number");
 
@@ -79,26 +88,29 @@ const calculateAvgAirQuality = (airQuality: OWAirPollutionResponse | null) => {
 		return el + acc;
 	}, 0);
 
-	return sum / aqis.length;
+	return round2(sum / aqis.length);
 };
 
-const calculateTempDay = (
+type DayPeriod = "day" | "night";
+
+const calculateAvgTempByPeriod = (
 	weather: OWCurrentWeatherResponse,
 	forecast: OWForecastResponse,
+	period: DayPeriod,
 ) => {
-	const dtSunrise = weather.sys.sunrise;
-	const dtSunset = weather.sys.sunset;
+	const { sunrise, sunset } = weather.sys;
 
 	const tempHourly = forecast.list
-		.slice(0, 25)
+		.slice(0, FORECAST_WINDOW)
 		.map((el) => ({ dt: el.dt, temp: el.main.temp }))
-		.filter(
-			(el) =>
-				typeof el.dt === "number" &&
-				typeof el.temp === "number" &&
-				el.dt >= dtSunrise &&
-				el.dt < dtSunset,
-		);
+		.filter((el) => {
+			if (typeof el.dt !== "number" || typeof el.temp !== "number") {
+				return false;
+			}
+
+			const isDay = el.dt >= sunrise && el.dt < sunset;
+			return period === "day" ? isDay : !isDay;
+		});
 
 	if (tempHourly.length === 0) {
 		return null;
@@ -108,35 +120,7 @@ const calculateTempDay = (
 		return acc + el.temp;
 	}, 0);
 
-	return sum / tempHourly.length;
-};
-
-const calculateTempNight = (
-	weather: OWCurrentWeatherResponse,
-	forecast: OWForecastResponse,
-) => {
-	const dtSunrise = weather.sys.sunrise;
-	const dtSunset = weather.sys.sunset;
-
-	const tempHourly = forecast.list
-		.slice(0, 25)
-		.map((el) => ({ dt: el.dt, temp: el.main.temp }))
-		.filter(
-			(el) =>
-				typeof el.dt === "number" &&
-				typeof el.temp === "number" &&
-				el.dt < dtSunrise || el.dt >= dtSunset,
-		);
-
-	if (tempHourly.length === 0) {
-		return null;
-	}
-
-	const sum = tempHourly.reduce((acc, el) => {
-		return acc + el.temp;
-	}, 0);
-
-	return sum / tempHourly.length;
+	return round2(sum / tempHourly.length);
 };
 
 const mapToCurrentWeather = (
@@ -148,8 +132,8 @@ const mapToCurrentWeather = (
 	}
 
 	return {
-		tempDay: calculateTempDay(weather, forecast),
-		tempNight: calculateTempNight(weather, forecast),
+		tempDay: calculateAvgTempByPeriod(weather, forecast, "day"),
+		tempNight: calculateAvgTempByPeriod(weather, forecast, "night"),
 		condition:
 			weather.weather.length > 0
 				? weather.weather.map((item) => item.main)
