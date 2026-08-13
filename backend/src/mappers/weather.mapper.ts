@@ -19,12 +19,12 @@ const round2 = (num: number) => {
 const mapToForecast = (forecast: OWForecastResponse): HourlyForecastPoint[] =>
 	forecast.list.slice(0, FORECAST_WINDOW).map((point) => ({
 		timestamp: point.dt,
-		temp: point.main.temp,
+		temp: round2(point.main.temp),
 		precipitationProbability: round2(point.pop * 100),
 	}));
 
 const calculateMaxPrecipChance = (forecast: OWForecastResponse) => {
-	if (!forecast || !forecast.list || forecast.list.length === 0) {
+	if (!forecast.list || forecast.list.length === 0) {
 		return null;
 	}
 
@@ -40,7 +40,7 @@ const calculateMaxPrecipChance = (forecast: OWForecastResponse) => {
 };
 
 const calculateAvgPrecipChance = (forecast: OWForecastResponse) => {
-	if (!forecast || !forecast.list || forecast.list.length === 0) {
+	if (!forecast.list || forecast.list.length === 0) {
 		return null;
 	}
 
@@ -154,4 +154,13 @@ const mapToWeatherDTO = (
 	hourlyAirPollution: mapToAirPollution(airPollutionHourly),
 });
 
-export { mapToWeatherDTO };
+export {
+	mapToWeatherDTO,
+	mapToForecast,
+	calculateMaxPrecipChance,
+	calculateAvgPrecipChance,
+	mapToAirPollution,
+	calculateAvgAirQuality,
+	mapToCurrentWeather,
+	calculateAvgTempByPeriod,
+};
