@@ -5,6 +5,7 @@ import type {
 	OWCurrentWeatherResponse,
 	OWForecastResponse,
 } from "../dtos/openWeather.dto.js";
+import { prisma } from "../db/prisma.js";
 
 const fetchCurrentWeather = async (city: string) => {
 	const response = await fetch(
@@ -59,6 +60,16 @@ const getWeatherByCity = async (city: string): Promise<WeatherResponseDTO> => {
 
 	const forecast = (await forecastSettled.value.json()) as OWForecastResponse;
 	const { lat, lon } = forecast.city.coord;
+
+	const existing = await prisma.city.findFirst({
+		where: { name: city },
+	});
+
+	if (!existing) {
+		await prisma.city.create({
+			data: { name: city, lat, lon },
+		});
+	}
 
 	const current =
 		currentSettled.status === "fulfilled"
