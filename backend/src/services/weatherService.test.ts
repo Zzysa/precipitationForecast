@@ -3,13 +3,25 @@ import { forecast, currentWeather, airPollution } from "../test/fixtures.js";
 import { getWeatherByCity } from "./weatherService.js";
 import { mapToWeatherDTO } from "../mappers/weather.mapper.js";
 import { mockFetchAll, stubFetch, fetchMock } from "../test/mockFetch.js";
+import { prisma } from "../db/prisma.js";
 
 stubFetch();
+
+vi.mock("../db/prisma.js", () => ({
+	prisma: {
+		city: {
+			findFirst: vi.fn(),
+			create: vi.fn(),
+		},
+	},
+}));
 
 const city = "Gdansk";
 
 beforeEach(() => {
 	fetchMock.mockReset();
+	vi.mocked(prisma.city.findFirst).mockReset();
+	vi.mocked(prisma.city.create).mockReset();
 });
 
 describe("weatherService", () => {
@@ -63,5 +75,30 @@ describe("weatherService", () => {
 		const result = await getWeatherByCity(city);
 
 		expect(result).toStrictEqual(mapToWeatherDTO(forecast, null, null));
+	});
+
+	it("does not create city when it already exists", async () => {
+		vi.mocked(prisma.city.findFirst).mockResolvedValue({
+			id: 1,
+			name: city,
+			lat: 52.52,
+			lon: 13.41,
+		});
+
+		mockFetchAll(forecast, null, null);
+
+		await getWeatherByCity(city);
+		expect(prisma.city.create).not.toHaveBeenCalled();
+	});
+
+	it("creates city when it does not exist", async () => {
+		vi.mocked(prisma.city.findFirst).mockResolvedValueOnce(null);
+
+		mockFetchAll(forecast, null, null);
+
+		await getWeatherByCity(city);
+		expect(prisma.city.create).toHaveBeenCalledWith({
+			data: { name: city, lat: 52.52, lon: 13.41 },
+		});
 	});
 });
