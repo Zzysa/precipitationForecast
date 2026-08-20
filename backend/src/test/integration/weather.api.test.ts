@@ -10,7 +10,13 @@ stubFetch();
 
 beforeEach(async () => {
 	fetchMock.mockReset();
+	await prisma.searchHistory.deleteMany();
 	await prisma.city.deleteMany();
+	await prisma.user.upsert({
+		where: { username: "demo" },
+		update: {},
+		create: { username: "demo" },
+	});
 });
 
 afterAll(async () => {
@@ -77,12 +83,88 @@ describe("/api/weather/:city", () => {
 	it("does not persist a city when forecast fails", async () => {
 		mockFetchAll(null, null, null);
 
-		await request(app).get("/api/weather/Gdansk")
+		await request(app).get("/api/weather/Gdansk");
 
 		const count = await prisma.city.count({
 			where: { name: "Gdansk" },
 		});
 
-		expect(count).toBe(0); 
-	})
+		expect(count).toBe(0);
+	});
+
+	it("persists a search city row after a successful forecast", async () => {
+		mockFetchAll(forecast, null, null);
+
+		await request(app).get("/api/weather/Gdansk");
+
+		const demoUser = await prisma.user.findUniqueOrThrow({
+			where: { username: "demo" },
+		});
+		const savedCity = await prisma.city.findUniqueOrThrow({
+			where: { name: "Gdansk" },
+		});
+
+		const row = await prisma.searchHistory.findUnique({
+			where: { userId_cityId: { userId: demoUser.id, cityId: savedCity.id } },
+		});
+
+		expect(row).toMatchObject({
+			cityId: savedCity.id,
+			userId: demoUser.id,
+			searchedAt: expect.any(Date),
+		});
+	});
+
+	it("change searched time for searchHistory while second call", async () => {
+		mockFetchAll(forecast, null, null);
+
+		await request(app).get("/api/weather/Gdansk");
+
+		const demoUser = await prisma.user.findUniqueOrThrow({
+			where: { username: "demo" },
+		});
+		const savedCity = await prisma.city.findUniqueOrThrow({
+			where: { name: "Gdansk" },
+		});
+
+		const firstSearchedTimeRes = await prisma.searchHistory.findUnique({
+			where: {
+				userId_cityId: {
+					userId: demoUser.id,
+					cityId: savedCity.id,
+				},
+			},
+		});
+
+		const firstSearchedTime = firstSearchedTimeRes?.searchedAt;
+
+		await request(app).get("/api/weather/Gdansk");
+
+		const secondSearchedTimeRes = await prisma.searchHistory.findUnique({
+			where: {
+				userId_cityId: {
+					userId: demoUser.id,
+					cityId: savedCity.id,
+				},
+			},
+		});
+
+		const secondSearchedTime = secondSearchedTimeRes?.searchedAt;
+
+		const count = await prisma.searchHistory.count();
+		expect(count).toBe(1);
+		expect(secondSearchedTime?.getTime()).not.toBe(
+			firstSearchedTime?.getTime(),
+		);
+	});
+
+	it("does not persist a searchHistory row when forecast fails", async () => {
+		mockFetchAll(null, null, null);
+
+		await request(app).get("/api/weather/Gdansk");
+
+		const count = await prisma.searchHistory.count();
+
+		expect(count).toBe(0);
+	});
 });
