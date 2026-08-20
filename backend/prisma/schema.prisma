@@ -11,5 +11,24 @@ model City {
     id Int @id @default(autoincrement())
     name String @unique
     lat Float 
-    lon Float 
+    lon Float
+    searchHistories SearchHistory[]
+}
+
+model User {
+    id Int @id @default(autoincrement())
+    username String @unique
+    searchHistories SearchHistory[]
+}
+
+model SearchHistory {
+    id Int @id @default(autoincrement())
+    userId Int 
+    cityId Int
+    searchedAt DateTime @default(now())
+
+    user User @relation(fields: [userId], references: [id])
+    city City @relation(fields: [cityId], references: [id])
+
+    @@unique([userId, cityId], name: "userId_cityId")
 }
