@@ -61,15 +61,33 @@ const getWeatherByCity = async (city: string): Promise<WeatherResponseDTO> => {
 	const forecast = (await forecastSettled.value.json()) as OWForecastResponse;
 	const { lat, lon } = forecast.city.coord;
 
-	const existing = await prisma.city.findFirst({
-		where: { name: city },
+	const demoUser = await prisma.user.findUniqueOrThrow({
+		where: { username: "demo" },
+		select: { id: true },
 	});
 
-	if (!existing) {
-		await prisma.city.create({
-			data: { name: city, lat, lon },
-		});
-	}
+	const savedCity = await prisma.city.upsert({
+		where: { name: city },
+		update: {},
+		create: { name: city, lat, lon },
+		select: { id: true },
+	});
+
+	await prisma.searchHistory.upsert({
+		where: {
+			userId_cityId: {
+				userId: demoUser.id,
+				cityId: savedCity.id,
+			},
+		},
+		update: {
+			searchedAt: new Date(),
+		},
+		create: {
+			userId: demoUser.id,
+			cityId: savedCity.id,
+		},
+	});
 
 	const current =
 		currentSettled.status === "fulfilled"

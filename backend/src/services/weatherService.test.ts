@@ -10,8 +10,13 @@ stubFetch();
 vi.mock("../db/prisma.js", () => ({
 	prisma: {
 		city: {
-			findFirst: vi.fn(),
-			create: vi.fn(),
+			upsert: vi.fn(),
+		},
+		user: {
+			findUniqueOrThrow: vi.fn(),
+		},
+		searchHistory: {
+			upsert: vi.fn(),
 		},
 	},
 }));
@@ -20,8 +25,26 @@ const city = "Gdansk";
 
 beforeEach(() => {
 	fetchMock.mockReset();
-	vi.mocked(prisma.city.findFirst).mockReset();
-	vi.mocked(prisma.city.create).mockReset();
+	vi.mocked(prisma.city.upsert).mockReset();
+	vi.mocked(prisma.user.findUniqueOrThrow).mockReset();
+	vi.mocked(prisma.searchHistory.upsert).mockReset();
+
+	vi.mocked(prisma.user.findUniqueOrThrow).mockResolvedValue({
+		id: 1,
+		username: "demo",
+	});
+	vi.mocked(prisma.city.upsert).mockResolvedValue({
+		id: 1,
+		name: city,
+		lat: 52.52,
+		lon: 13.41,
+	});
+	vi.mocked(prisma.searchHistory.upsert).mockResolvedValue({
+		id: 1,
+		userId: 1,
+		cityId: 1,
+		searchedAt: new Date(),
+	});
 });
 
 describe("weatherService", () => {
@@ -77,28 +100,54 @@ describe("weatherService", () => {
 		expect(result).toStrictEqual(mapToWeatherDTO(forecast, null, null));
 	});
 
-	it("does not create city when it already exists", async () => {
-		vi.mocked(prisma.city.findFirst).mockResolvedValue({
-			id: 1,
-			name: city,
-			lat: 52.52,
-			lon: 13.41,
-		});
-
+	it("add to search history when forecast is fetched", async () => {
 		mockFetchAll(forecast, null, null);
 
 		await getWeatherByCity(city);
-		expect(prisma.city.create).not.toHaveBeenCalled();
+
+		expect(prisma.searchHistory.upsert).toHaveBeenCalledWith({
+			where: {
+				userId_cityId: {
+					userId: 1,
+					cityId: 1,
+				},
+			},
+			update: {
+				searchedAt: expect.any(Date),
+			},
+			create: {
+				userId: 1,
+				cityId: 1,
+			},
+		});
 	});
 
-	it("creates city when it does not exist", async () => {
-		vi.mocked(prisma.city.findFirst).mockResolvedValueOnce(null);
-
+	it("add to city when forecast is fetched", async () => {
 		mockFetchAll(forecast, null, null);
 
 		await getWeatherByCity(city);
-		expect(prisma.city.create).toHaveBeenCalledWith({
-			data: { name: city, lat: 52.52, lon: 13.41 },
+
+		expect(prisma.city.upsert).toHaveBeenCalledWith({
+			where: {
+				name: city,
+			},
+			update: {},
+			create: {
+				name: city,
+				lat: 52.52,
+				lon: 13.41,
+			},
+			select: { id: true },
 		});
+	});
+
+	it("do not call city and search history upsert when forecast is failed", async () => {
+		mockFetchAll(null, null, null);
+
+		await expect(getWeatherByCity(city)).rejects.toThrow("error")
+
+		expect(prisma.user.findUniqueOrThrow).not.toHaveBeenCalled();
+		expect(prisma.city.upsert).not.toHaveBeenCalled();
+		expect(prisma.searchHistory.upsert).not.toHaveBeenCalled();
 	});
 });

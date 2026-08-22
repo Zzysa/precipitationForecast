@@ -1,22 +1,22 @@
 import { it, describe, expect } from "vitest";
-import { WeatherQuerySchema } from "./weatherSchemas.js";
+import { CityParamsSchema } from "./weatherSchemas.js";
 
 const city = { city: "     New York    " };
 
-describe("WeatherQuerySchema", () => {
+describe("CityParamsSchema", () => {
 	it("happy case", () => {
-		expect(WeatherQuerySchema.parse(city)).toStrictEqual({ city: "New York" });
+		expect(CityParamsSchema.parse(city)).toStrictEqual({ city: "New York" });
 	});
 
 	it("city recives number", () => {
-		expect(() => WeatherQuerySchema.parse({ city: 111 })).toThrow();
+		expect(() => CityParamsSchema.parse({ city: 111 })).toThrow();
 	});
 
     it("city recives nothing", () => {
-		expect(() => WeatherQuerySchema.parse({ })).toThrow();
+		expect(() => CityParamsSchema.parse({ })).toThrow();
 	});
 
     it("city recives many cities", () => {
-		expect(() => WeatherQuerySchema.parse({ city: ["New York", "Gdansk"] })).toThrow();
+		expect(() => CityParamsSchema.parse({ city: ["New York", "Gdansk"] })).toThrow();
 	});
 });
