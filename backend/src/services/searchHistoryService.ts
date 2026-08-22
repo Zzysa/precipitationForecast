@@ -14,4 +14,23 @@ const getSearchHistoryForDemoUser = async () => {
 	});
 };
 
-export { getSearchHistoryForDemoUser };
+const deleteSearchHistoryByCityNameForDemoUser = async (city: string) => {
+	const demoUser = await prisma.user.findUniqueOrThrow({
+		where: { username: "demo" },
+		select: { id: true },
+	});
+
+	await prisma.searchHistory.deleteMany({
+		where: {
+			userId: demoUser.id,
+			city: {
+				name: city,
+			},
+		},
+	});
+};
+
+export {
+	getSearchHistoryForDemoUser,
+	deleteSearchHistoryByCityNameForDemoUser,
+};
