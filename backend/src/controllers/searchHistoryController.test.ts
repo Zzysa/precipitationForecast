@@ -1,12 +1,19 @@
 import { vi, expect, describe, it, beforeEach } from "vitest";
-import { getSearchHistory } from "./searchHistoryController.js";
+import {
+	getSearchHistory,
+	deleteSearchHistory,
+} from "./searchHistoryController.js";
 import type { Request, Response } from "express";
-import { getSearchHistoryForDemoUser } from "../services/searchHistoryService.js";
+import {
+	getSearchHistoryForDemoUser,
+	deleteSearchHistoryByCityNameForDemoUser,
+} from "../services/searchHistoryService.js";
 
-const req = {} as unknown as Request;
+let req = {} as unknown as Request;
 const res = {
 	status: vi.fn().mockReturnThis(),
 	json: vi.fn(),
+	send: vi.fn(),
 } as unknown as Response;
 
 const expectedHistory = [
@@ -30,6 +37,7 @@ beforeEach(() => {
 
 vi.mock("../services/searchHistoryService.js", () => ({
 	getSearchHistoryForDemoUser: vi.fn(),
+	deleteSearchHistoryByCityNameForDemoUser: vi.fn(),
 }));
 
 describe("searchHistoryController", () => {
@@ -49,5 +57,40 @@ describe("searchHistoryController", () => {
 		);
 
 		await expect(getSearchHistory(req, res)).rejects.toThrow("API down");
+	});
+});
+
+describe("deleteSearchHistory", () => {
+	it("delete row by city name", async () => {
+		req = {
+			params: { city: "Gdansk" },
+		} as unknown as Request;
+
+		vi.mocked(deleteSearchHistoryByCityNameForDemoUser).mockResolvedValue();
+
+		await deleteSearchHistory(req, res);
+
+		expect(deleteSearchHistoryByCityNameForDemoUser).toHaveBeenCalledWith(
+			"Gdansk",
+		);
+		expect(res.status).toHaveBeenCalledWith(204);
+		expect(res.send).toHaveBeenCalledWith();
+	});
+
+	it("throwing an error", async () => {
+		vi.mocked(deleteSearchHistoryByCityNameForDemoUser).mockRejectedValue(
+			new Error("API down"),
+		);
+
+		await expect(deleteSearchHistory(req, res)).rejects.toThrow("API down");
+	});
+
+	it("returns 400 for an empty city", async () => {
+		req = {
+			params: { city: "  " },
+		} as unknown as Request;
+
+		await expect(deleteSearchHistory(req, res)).rejects.toThrow();
+		expect(deleteSearchHistoryByCityNameForDemoUser).not.toHaveBeenCalled();
 	});
 });

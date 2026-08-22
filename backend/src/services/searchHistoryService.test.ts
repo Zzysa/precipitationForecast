@@ -1,5 +1,8 @@
 import { vi, describe, it, expect } from "vitest";
-import { getSearchHistoryForDemoUser } from "./searchHistoryService.js";
+import {
+	getSearchHistoryForDemoUser,
+	deleteSearchHistoryByCityNameForDemoUser,
+} from "./searchHistoryService.js";
 import { prisma } from "../db/prisma.js";
 
 const history = Array.from({ length: 15 }, (_, i) => ({
@@ -18,6 +21,7 @@ vi.mock("../db/prisma.js", () => ({
 		},
 		searchHistory: {
 			findMany: vi.fn(),
+			deleteMany: vi.fn(),
 		},
 	},
 }));
@@ -46,5 +50,27 @@ describe("searchHistoryService", () => {
 		});
 
 		expect(result).toEqual(expectedHistory);
+	});
+});
+
+describe("deleteSearchHistoryByCityNameForDemoUser", () => {
+	it("delete search history row by city name", async () => {
+		const city = "Gdansk";
+
+		await deleteSearchHistoryByCityNameForDemoUser(city);
+
+		expect(prisma.user.findUniqueOrThrow).toHaveBeenCalledWith({
+			where: { username: "demo" },
+			select: { id: true },
+		});
+
+		expect(prisma.searchHistory.deleteMany).toHaveBeenCalledWith({
+			where: {
+				userId: 7,
+				city: {
+					name: city,
+				},
+			},
+		});
 	});
 });
