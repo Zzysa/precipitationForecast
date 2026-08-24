@@ -60,6 +60,7 @@ const getWeatherByCity = async (city: string): Promise<WeatherResponseDTO> => {
 
 	const forecast = (await forecastSettled.value.json()) as OWForecastResponse;
 	const { lat, lon } = forecast.city.coord;
+	const { country, name } = forecast.city;
 
 	const demoUser = await prisma.user.findUniqueOrThrow({
 		where: { username: "demo" },
@@ -67,9 +68,9 @@ const getWeatherByCity = async (city: string): Promise<WeatherResponseDTO> => {
 	});
 
 	const savedCity = await prisma.city.upsert({
-		where: { name: city },
-		update: {},
-		create: { name: city, lat, lon },
+		where: { lat_lon: { lat, lon } },
+		update: { name, country},
+		create: { name: name, lat, lon, state: null, country },
 		select: { id: true },
 	});
 

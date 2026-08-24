@@ -22,6 +22,8 @@ interface OWForecastHourly {
 interface OWForecastResponse {
 	list: OWForecastHourly[];
 	city: {
+		name: string
+		country: string;
 		coord: {
 			lat: number;
 			lon: number;

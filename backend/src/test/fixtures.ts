@@ -1,5 +1,7 @@
 const forecast = {
 	city: {
+		name: "Gdansk",
+		country: "PL",
 		coord: { lat: 52.52, lon: 13.41 },
 	},
 	list: [

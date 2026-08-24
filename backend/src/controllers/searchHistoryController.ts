@@ -1,9 +1,9 @@
 import type { Request, Response } from "express";
 import {
 	getSearchHistoryForDemoUser,
-	deleteSearchHistoryByCityNameForDemoUser,
+	deleteSearchHistoryByCityIdForDemoUser,
 } from "../services/searchHistoryService.js";
-import { CityParamsSchema } from "../schemas/weatherSchemas.js";
+import { CityIdParamsSchema } from "../schemas/weatherSchemas.js";
 
 const getSearchHistory = async (req: Request, res: Response) => {
 	const data = await getSearchHistoryForDemoUser();
@@ -12,9 +12,9 @@ const getSearchHistory = async (req: Request, res: Response) => {
 };
 
 const deleteSearchHistory = async (req: Request, res: Response) => {
-	const { city } = CityParamsSchema.parse(req.params);
+	const { cityId } = CityIdParamsSchema.parse(req.params);
 
-	await deleteSearchHistoryByCityNameForDemoUser(city);
+	await deleteSearchHistoryByCityIdForDemoUser(cityId);
 
 	res.status(204).send();
 };
