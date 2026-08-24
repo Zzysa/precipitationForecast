@@ -36,6 +36,8 @@ beforeEach(() => {
 	vi.mocked(prisma.city.upsert).mockResolvedValue({
 		id: 1,
 		name: city,
+		state: null,
+		country: "PL",
 		lat: 52.52,
 		lon: 13.41,
 	});
@@ -129,13 +131,21 @@ describe("weatherService", () => {
 
 		expect(prisma.city.upsert).toHaveBeenCalledWith({
 			where: {
-				name: city,
+				lat_lon: {
+					lat: 52.52,
+					lon: 13.41,
+				},
 			},
-			update: {},
+			update: {
+				name: city,
+				country: "PL",
+			},
 			create: {
 				name: city,
 				lat: 52.52,
 				lon: 13.41,
+				state: null,
+				country: "PL",
 			},
 			select: { id: true },
 		});
