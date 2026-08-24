@@ -6,7 +6,7 @@ import {
 import type { Request, Response } from "express";
 import {
 	getSearchHistoryForDemoUser,
-	deleteSearchHistoryByCityNameForDemoUser,
+	deleteSearchHistoryByCityIdForDemoUser,
 } from "../services/searchHistoryService.js";
 
 let req = {} as unknown as Request;
@@ -25,6 +25,8 @@ const expectedHistory = [
 		city: {
 			id: 3,
 			name: "Gdansk",
+			state: null,
+			country: "PL",
 			lat: 52.52,
 			lon: 13.41,
 		},
@@ -37,7 +39,7 @@ beforeEach(() => {
 
 vi.mock("../services/searchHistoryService.js", () => ({
 	getSearchHistoryForDemoUser: vi.fn(),
-	deleteSearchHistoryByCityNameForDemoUser: vi.fn(),
+	deleteSearchHistoryByCityIdForDemoUser: vi.fn(),
 }));
 
 describe("searchHistoryController", () => {
@@ -61,36 +63,40 @@ describe("searchHistoryController", () => {
 });
 
 describe("deleteSearchHistory", () => {
-	it("delete row by city name", async () => {
+	it("deletes a row by city id", async () => {
 		req = {
-			params: { city: "Gdansk" },
+			params: { cityId: "3" },
 		} as unknown as Request;
 
-		vi.mocked(deleteSearchHistoryByCityNameForDemoUser).mockResolvedValue();
+		vi.mocked(deleteSearchHistoryByCityIdForDemoUser).mockResolvedValue();
 
 		await deleteSearchHistory(req, res);
 
-		expect(deleteSearchHistoryByCityNameForDemoUser).toHaveBeenCalledWith(
-			"Gdansk",
-		);
+		expect(deleteSearchHistoryByCityIdForDemoUser).toHaveBeenCalledWith(3);
 		expect(res.status).toHaveBeenCalledWith(204);
 		expect(res.send).toHaveBeenCalledWith();
 	});
 
 	it("throwing an error", async () => {
-		vi.mocked(deleteSearchHistoryByCityNameForDemoUser).mockRejectedValue(
+		req = {
+			params: { cityId: "3" },
+		} as unknown as Request;
+
+		vi.mocked(deleteSearchHistoryByCityIdForDemoUser).mockRejectedValue(
 			new Error("API down"),
 		);
 
 		await expect(deleteSearchHistory(req, res)).rejects.toThrow("API down");
 	});
 
-	it("returns 400 for an empty city", async () => {
+	it("rejects an invalid city id", async () => {
 		req = {
-			params: { city: "  " },
+			params: { cityId: "abc" },
 		} as unknown as Request;
 
-		await expect(deleteSearchHistory(req, res)).rejects.toThrow();
-		expect(deleteSearchHistoryByCityNameForDemoUser).not.toHaveBeenCalled();
+		await expect(deleteSearchHistory(req, res)).rejects.toThrow(
+			"City id must be a number",
+		);
+		expect(deleteSearchHistoryByCityIdForDemoUser).not.toHaveBeenCalled();
 	});
 });

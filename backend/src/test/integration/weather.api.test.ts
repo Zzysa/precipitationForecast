@@ -57,11 +57,12 @@ describe("/api/weather/:city", () => {
 		await request(app).get("/api/weather/Gdansk");
 
 		const savedCity = await prisma.city.findUnique({
-			where: { name: "Gdansk" },
+			where: { lat_lon: { lat: 52.52, lon: 13.41 } },
 		});
 
 		expect(savedCity).toMatchObject({
 			name: "Gdansk",
+			country: "PL",
 			lat: 52.52,
 			lon: 13.41,
 		});
@@ -74,7 +75,7 @@ describe("/api/weather/:city", () => {
 		await request(app).get("/api/weather/Gdansk");
 
 		const count = await prisma.city.count({
-			where: { name: "Gdansk" },
+			where: { lat: 52.52, lon: 13.41 },
 		});
 
 		expect(count).toBe(1);
@@ -86,7 +87,7 @@ describe("/api/weather/:city", () => {
 		await request(app).get("/api/weather/Gdansk");
 
 		const count = await prisma.city.count({
-			where: { name: "Gdansk" },
+			where: { lat: 52.52, lon: 13.41 },
 		});
 
 		expect(count).toBe(0);
@@ -101,7 +102,7 @@ describe("/api/weather/:city", () => {
 			where: { username: "demo" },
 		});
 		const savedCity = await prisma.city.findUniqueOrThrow({
-			where: { name: "Gdansk" },
+			where: { lat_lon: { lat: 52.52, lon: 13.41 } },
 		});
 
 		const row = await prisma.searchHistory.findUnique({
@@ -124,7 +125,7 @@ describe("/api/weather/:city", () => {
 			where: { username: "demo" },
 		});
 		const savedCity = await prisma.city.findUniqueOrThrow({
-			where: { name: "Gdansk" },
+			where: { lat_lon: { lat: 52.52, lon: 13.41 } },
 		});
 
 		const firstSearchedTimeRes = await prisma.searchHistory.findUnique({

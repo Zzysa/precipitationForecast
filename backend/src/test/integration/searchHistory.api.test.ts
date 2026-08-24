@@ -1,11 +1,9 @@
 import { it, expect, describe, beforeEach, afterAll } from "vitest";
 import request from "supertest";
 import { app } from "../../server.js";
-import { fetchMock } from "../mockFetch.js";
 import { prisma } from "../../db/prisma.js";
 
 beforeEach(async () => {
-	fetchMock.mockReset();
 	await prisma.searchHistory.deleteMany();
 	await prisma.city.deleteMany();
 	await prisma.user.upsert({
@@ -28,6 +26,7 @@ describe("GET /api/search-history", () => {
 		const city = await prisma.city.create({
 			data: {
 				name: "Gdansk",
+				country: "PL",
 				lat: 52.52,
 				lon: 13.41,
 			},
@@ -53,6 +52,8 @@ describe("GET /api/search-history", () => {
 					city: {
 						id: city.id,
 						name: "Gdansk",
+						state: null,
+						country: "PL",
 						lat: 52.52,
 						lon: 13.41,
 					},
@@ -68,8 +69,8 @@ describe("GET /api/search-history", () => {
 	});
 });
 
-describe("DELETE /api/search-history/:city", () => {
-	it("delete a search history row by city name", async () => {
+describe("DELETE /api/search-history/:cityId", () => {
+	it("deletes a search history row by city id", async () => {
 		const demoUser = await prisma.user.findUniqueOrThrow({
 			where: { username: "demo" },
 		});
@@ -77,6 +78,7 @@ describe("DELETE /api/search-history/:city", () => {
 		const city = await prisma.city.create({
 			data: {
 				name: "Gdansk",
+				country: "PL",
 				lat: 52.52,
 				lon: 13.41,
 			},
@@ -89,7 +91,9 @@ describe("DELETE /api/search-history/:city", () => {
 			},
 		});
 
-		const res = await request(app).delete("/api/search-history/Gdansk");
+		const res = await request(app).delete(
+			`/api/search-history/${city.id}`,
+		);
 
 		const count = await prisma.searchHistory.count({
 			where: {
@@ -103,10 +107,10 @@ describe("DELETE /api/search-history/:city", () => {
 		expect(count).toBe(0);
 	});
 
-	it("returns 400 error if city is empty", async () => {
-		const res = await request(app).delete("/api/search-history/%20%20");
+	it("returns 400 error if city id is invalid", async () => {
+		const res = await request(app).delete("/api/search-history/abc");
 
-		expect(res.body.error[0].message).toBe("City name cannot be empty");
 		expect(res.status).toBe(400);
+		expect(res.body.error[0].message).toBe("City id must be a number");
 	});
 });

@@ -9,10 +9,14 @@ datasource db {
 
 model City {
     id Int @id @default(autoincrement())
-    name String @unique
+    name String 
+    state String?
+    country String
     lat Float 
     lon Float
     searchHistories SearchHistory[]
+
+    @@unique([lat, lon], name: "lat_lon")
 }
 
 model User {

@@ -1,7 +1,7 @@
 import { vi, describe, it, expect } from "vitest";
 import {
 	getSearchHistoryForDemoUser,
-	deleteSearchHistoryByCityNameForDemoUser,
+	deleteSearchHistoryByCityIdForDemoUser,
 } from "./searchHistoryService.js";
 import { prisma } from "../db/prisma.js";
 
@@ -53,11 +53,11 @@ describe("searchHistoryService", () => {
 	});
 });
 
-describe("deleteSearchHistoryByCityNameForDemoUser", () => {
-	it("delete search history row by city name", async () => {
-		const city = "Gdansk";
+describe("deleteSearchHistoryByCityIdForDemoUser", () => {
+	it("deletes search history row by city id", async () => {
+		const cityId = 12;
 
-		await deleteSearchHistoryByCityNameForDemoUser(city);
+		await deleteSearchHistoryByCityIdForDemoUser(cityId);
 
 		expect(prisma.user.findUniqueOrThrow).toHaveBeenCalledWith({
 			where: { username: "demo" },
@@ -67,9 +67,7 @@ describe("deleteSearchHistoryByCityNameForDemoUser", () => {
 		expect(prisma.searchHistory.deleteMany).toHaveBeenCalledWith({
 			where: {
 				userId: 7,
-				city: {
-					name: city,
-				},
+				cityId,
 			},
 		});
 	});

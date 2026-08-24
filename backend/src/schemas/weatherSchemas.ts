@@ -7,4 +7,11 @@ const CityParamsSchema = z.object({
 		.min(1, { error: "City name cannot be empty" }),
 });
 
-export { CityParamsSchema };
+const CityIdParamsSchema = z.object({
+	cityId: z.coerce
+		.number({ error: "City id must be a number" })
+		.int({ error: "City id must be an integer" })
+		.positive({ error: "City id must be a positive number" }),
+});
+
+export { CityParamsSchema, CityIdParamsSchema };

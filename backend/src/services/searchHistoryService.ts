@@ -14,7 +14,7 @@ const getSearchHistoryForDemoUser = async () => {
 	});
 };
 
-const deleteSearchHistoryByCityNameForDemoUser = async (city: string) => {
+const deleteSearchHistoryByCityIdForDemoUser = async (cityId: number) => {
 	const demoUser = await prisma.user.findUniqueOrThrow({
 		where: { username: "demo" },
 		select: { id: true },
@@ -23,14 +23,12 @@ const deleteSearchHistoryByCityNameForDemoUser = async (city: string) => {
 	await prisma.searchHistory.deleteMany({
 		where: {
 			userId: demoUser.id,
-			city: {
-				name: city,
-			},
+			cityId,
 		},
 	});
 };
 
 export {
 	getSearchHistoryForDemoUser,
-	deleteSearchHistoryByCityNameForDemoUser,
+	deleteSearchHistoryByCityIdForDemoUser,
 };
