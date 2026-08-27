@@ -49,4 +49,23 @@ const deleteFavoriteForDemoUser = async (cityId: number) => {
 	});
 };
 
-export { createFavoriteForDemoUser, deleteFavoriteForDemoUser };
+const getFavoriteForDemoUser = async () => {
+	const demoUser = await prisma.user.findUniqueOrThrow({
+		where: { username: "demo" },
+		select: { id: true },
+	});
+
+	return await prisma.favorite.findMany({
+		where: {
+			userId: demoUser.id,
+		},
+		include: { city: true },
+		orderBy: { createdAt: "desc" },
+	});
+};
+
+export {
+	createFavoriteForDemoUser,
+	deleteFavoriteForDemoUser,
+	getFavoriteForDemoUser,
+};

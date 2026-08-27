@@ -6,6 +6,7 @@ import {
 import {
 	createFavoriteForDemoUser,
 	deleteFavoriteForDemoUser,
+	getFavoriteForDemoUser,
 } from "../services/favoritesService.js";
 
 const createFavorite = async (req: Request, res: Response) => {
@@ -24,4 +25,10 @@ const deleteFavorite = async (req: Request, res: Response) => {
 	res.status(204).send();
 };
 
-export { createFavorite, deleteFavorite };
+const getFavorites = async (req: Request, res: Response) => {
+	const data = await getFavoriteForDemoUser();
+
+	res.status(200).json({ favorites: data });
+};
+
+export { createFavorite, deleteFavorite, getFavorites };
