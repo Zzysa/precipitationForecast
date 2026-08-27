@@ -1,6 +1,9 @@
 import { vi, expect, describe, it } from "vitest";
 import { prisma } from "../db/prisma.js";
-import { createFavoriteForDemoUser } from "./favoritesService.js";
+import {
+	createFavoriteForDemoUser,
+	deleteFavoriteForDemoUser,
+} from "./favoritesService.js";
 import type { CreateFavoriteInputType } from "../schemas/weatherSchemas.js";
 
 const cityInput: CreateFavoriteInputType = {
@@ -26,6 +29,7 @@ vi.mock("../db/prisma.js", () => ({
 		},
 		favorite: {
 			upsert: vi.fn(),
+			deleteMany: vi.fn(),
 		},
 	},
 }));
@@ -70,6 +74,28 @@ describe("createFavoriteForDemoUser", () => {
 			create: {
 				userId: 7,
 				cityId: 8,
+			},
+		});
+	});
+});
+
+describe("deleteFavoriteForDemoUser", () => {
+	it("delete favorite row by city id", async () => {
+		const cityId = 15;
+
+		await deleteFavoriteForDemoUser(cityId);
+
+		expect(prisma.user.findUniqueOrThrow).toHaveBeenCalledWith({
+			where: {
+				username: "demo",
+			},
+			select: { id: true },
+		});
+
+		expect(prisma.favorite.deleteMany).toHaveBeenCalledWith({
+			where: {
+				userId: 7,
+				cityId,
 			},
 		});
 	});

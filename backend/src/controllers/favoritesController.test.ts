@@ -1,7 +1,10 @@
 import type { Request, Response } from "express";
 import { vi, expect, describe, it, beforeEach } from "vitest";
-import { createFavorite } from "./favoritesController.js";
-import { createFavoriteForDemoUser } from "../services/favoritesService.js";
+import { createFavorite, deleteFavorite } from "./favoritesController.js";
+import {
+	createFavoriteForDemoUser,
+	deleteFavoriteForDemoUser,
+} from "../services/favoritesService.js";
 import { ZodError } from "zod";
 
 const city = {
@@ -23,6 +26,7 @@ let req = {
 
 vi.mock("../services/favoritesService.js", () => ({
 	createFavoriteForDemoUser: vi.fn(),
+	deleteFavoriteForDemoUser: vi.fn(),
 }));
 
 beforeEach(() => {
@@ -46,5 +50,24 @@ describe("createFavorite", () => {
 
 		await expect(createFavorite(req, res)).rejects.toBeInstanceOf(ZodError);
 		expect(createFavoriteForDemoUser).not.toHaveBeenCalled();
+	});
+});
+
+describe("deleteFavorite", () => {
+	it("return correct status", async () => {
+		req = { params: { cityId: "15" } } as unknown as Request;
+
+		await deleteFavorite(req, res);
+
+		expect(deleteFavoriteForDemoUser).toHaveBeenCalledWith(15);
+		expect(res.status).toHaveBeenCalledWith(204);
+		expect(res.send).toHaveBeenCalledWith();
+	});
+
+	it("rejects invalid params", async () => {
+		req = { params: {} } as unknown as Request;
+
+		await expect(deleteFavorite(req, res)).rejects.toBeInstanceOf(ZodError);
+		expect(deleteFavoriteForDemoUser).not.toHaveBeenCalled();
 	});
 });
