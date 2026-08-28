@@ -14,4 +14,15 @@ const CityIdParamsSchema = z.object({
 		.positive({ error: "City id must be a positive number" }),
 });
 
-export { CityParamsSchema, CityIdParamsSchema };
+const CreateFavoriteBodySchema = z.object({
+	name: z.string().trim().min(1),
+	state: z.string().trim().min(1).nullable(),
+	country: z.string().trim().min(1),
+	lat: z.number(),
+	lon: z.number(),
+});
+
+type CreateFavoriteInputType = z.infer<typeof CreateFavoriteBodySchema>;
+
+export { CityParamsSchema, CityIdParamsSchema, CreateFavoriteBodySchema };
+export type { CreateFavoriteInputType };

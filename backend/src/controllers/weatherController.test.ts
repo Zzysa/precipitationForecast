@@ -2,7 +2,7 @@ import { vi, it, describe, expect, beforeEach } from "vitest";
 import { getWeatherByCity } from "../services/weatherService.js";
 import type { WeatherResponseDTO } from "../dtos/weather.dto.js";
 import type { Request, Response } from "express";
-import { weatherController } from "./weatherController.js";
+import { getWeather } from "./weatherController.js";
 
 const fakeWeather: WeatherResponseDTO = {
 	hourlyForecast: [],
@@ -25,11 +25,11 @@ vi.mock("../services/weatherService.js", () => ({
 
 beforeEach(() => vi.clearAllMocks());
 
-describe("weatherController", () => {
+describe("getWeather", () => {
 	it("happy case", async () => {
 		vi.mocked(getWeatherByCity).mockResolvedValue(fakeWeather);
 
-		await weatherController(req, res);
+		await getWeather(req, res);
 
 		expect(getWeatherByCity).toHaveBeenCalledWith("Gdansk");
 		expect(res.status).toHaveBeenCalledWith(200);
@@ -39,6 +39,6 @@ describe("weatherController", () => {
 	it("throwing an error", async () => {
 		vi.mocked(getWeatherByCity).mockRejectedValue(new Error("API down"));
 
-		await expect(weatherController(req, res)).rejects.toThrow("API down");
+		await expect(getWeather(req, res)).rejects.toThrow("API down");
 	});
 });
