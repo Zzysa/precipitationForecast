@@ -3,8 +3,16 @@ import { prisma } from "../db/prisma.js";
 import {
 	createFavoriteForDemoUser,
 	deleteFavoriteForDemoUser,
+	getFavoriteForDemoUser,
 } from "./favoritesService.js";
 import type { CreateFavoriteInputType } from "../schemas/weatherSchemas.js";
+
+const favorite = Array.from({ length: 10 }, (_, i) => ({
+	id: i + 1,
+	userId: 7,
+	cityId: i + 1,
+	createdAt: new Date(1710000000 + i),
+}));
 
 const cityInput: CreateFavoriteInputType = {
 	name: "Gdansk",
@@ -30,9 +38,12 @@ vi.mock("../db/prisma.js", () => ({
 		favorite: {
 			upsert: vi.fn(),
 			deleteMany: vi.fn(),
+			findMany: vi.fn(),
 		},
 	},
 }));
+
+vi.mocked(prisma.favorite.findMany).mockResolvedValueOnce(favorite);
 
 vi.mocked(prisma.user.findUniqueOrThrow).mockResolvedValue({
 	id: 7,
@@ -98,5 +109,27 @@ describe("deleteFavoriteForDemoUser", () => {
 				cityId,
 			},
 		});
+	});
+});
+
+describe("getFavoriteForDemoUser", () => {
+	it("returns favorite cities for a demo user", async () => {
+		const result = await getFavoriteForDemoUser();
+
+		expect(prisma.user.findUniqueOrThrow).toHaveBeenCalledWith({
+			where: {
+				username: "demo",
+			},
+			select: { id: true },
+		});
+
+		expect(prisma.favorite.findMany).toHaveBeenCalledWith({
+			where: {
+				userId: 7,
+			},
+			include: { city: true },
+			orderBy: { createdAt: "desc" },
+		});
+		expect(result).toEqual(favorite);
 	});
 });

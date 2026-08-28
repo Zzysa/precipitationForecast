@@ -78,9 +78,7 @@ describe("DELETE /api/favorites/:cityId", () => {
 			},
 		});
 
-		const res = await request(app).delete(
-			`/api/favorites/${savedCity.id}`,
-		);
+		const res = await request(app).delete(`/api/favorites/${savedCity.id}`);
 
 		const count = await prisma.favorite.count({
 			where: {
@@ -106,5 +104,92 @@ describe("DELETE /api/favorites/:cityId", () => {
 
 		expect(res.status).toBe(400);
 		expect(res.body.error[0].message).toBe("City id must be a number");
+	});
+});
+
+describe("GET /api/favorites", () => {
+	it("returns favorite cites for a demo user", async () => {
+		const demoUser = await prisma.user.findUniqueOrThrow({
+			where: { username: "demo" },
+		});
+
+		const savedCity = await prisma.city.create({
+			data: {
+				name: "Gdansk",
+				country: "PL",
+				lat: 52.52,
+				lon: 13.41,
+			},
+		});
+
+		const savedCity2 = await prisma.city.create({
+			data: {
+				name: "London",
+				country: "EN",
+				lat: 55.52,
+				lon: 20.41,
+			},
+		});
+
+		await prisma.favorite.create({
+			data: {
+				userId: demoUser.id,
+				cityId: savedCity.id,
+			},
+		});
+
+		await prisma.favorite.create({
+			data: {
+				userId: demoUser.id,
+				cityId: savedCity2.id,
+			},
+		});
+
+		const res = await request(app).get("/api/favorites");
+
+		expect(res.status).toBe(200);
+		expect(res.body).toEqual({
+			favorites: [
+				{
+					id: expect.any(Number),
+					userId: demoUser.id,
+					cityId: savedCity2.id,
+					createdAt: expect.any(String),
+					city: {
+						id: savedCity2.id,
+						name: "London",
+						state: null,
+						country: "EN",
+						lat: 55.52,
+						lon: 20.41,
+					},
+				},
+				{
+					id: expect.any(Number),
+					userId: demoUser.id,
+					cityId: savedCity.id,
+					createdAt: expect.any(String),
+					city: {
+						id: savedCity.id,
+						name: "Gdansk",
+						state: null,
+						country: "PL",
+						lat: 52.52,
+						lon: 13.41,
+					},
+				},
+			],
+		});
+	});
+
+	it("returns nothing if no favorites", async () => {
+		await prisma.user.findUniqueOrThrow({
+			where: { username: "demo" },
+		});
+
+		const res = await request(app).get("/api/favorites");
+
+		expect(res.status).toBe(200);
+		expect(res.body).toEqual({ favorites: [] });
 	});
 });

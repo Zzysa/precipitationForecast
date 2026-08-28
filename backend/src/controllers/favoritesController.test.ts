@@ -1,9 +1,14 @@
 import type { Request, Response } from "express";
 import { vi, expect, describe, it, beforeEach } from "vitest";
-import { createFavorite, deleteFavorite } from "./favoritesController.js";
+import {
+	createFavorite,
+	deleteFavorite,
+	getFavorites,
+} from "./favoritesController.js";
 import {
 	createFavoriteForDemoUser,
 	deleteFavoriteForDemoUser,
+	getFavoriteForDemoUser,
 } from "../services/favoritesService.js";
 import { ZodError } from "zod";
 
@@ -18,15 +23,34 @@ const city = {
 const res = {
 	status: vi.fn().mockReturnThis(),
 	send: vi.fn(),
+	json: vi.fn(),
 } as unknown as Response;
 
 let req = {
 	body: city,
 } as unknown as Request;
 
+const expectedFavorites = [
+	{
+		id: 1,
+		userId: 7,
+		cityId: 3,
+		createdAt: new Date(),
+		city: {
+			id: 3,
+			name: "Gdansk",
+			state: null,
+			country: "PL",
+			lat: 52.52,
+			lon: 13.41,
+		},
+	},
+];
+
 vi.mock("../services/favoritesService.js", () => ({
 	createFavoriteForDemoUser: vi.fn(),
 	deleteFavoriteForDemoUser: vi.fn(),
+	getFavoriteForDemoUser: vi.fn(),
 }));
 
 beforeEach(() => {
@@ -69,5 +93,22 @@ describe("deleteFavorite", () => {
 
 		await expect(deleteFavorite(req, res)).rejects.toBeInstanceOf(ZodError);
 		expect(deleteFavoriteForDemoUser).not.toHaveBeenCalled();
+	});
+});
+
+describe("getFavorites", () => {
+	it("returns favorites", async () => {
+		vi.mocked(getFavoriteForDemoUser).mockResolvedValue(expectedFavorites);
+
+		await getFavorites(req, res);
+
+		expect(getFavoriteForDemoUser).toHaveBeenCalled();
+		expect(res.status).toHaveBeenCalledWith(200);
+		expect(res.json).toHaveBeenCalledWith({ favorites: expectedFavorites });
+	});
+
+	it("propagates service error", async () => {
+		vi.mocked(getFavoriteForDemoUser).mockRejectedValue(new Error("API down"));
+		await expect(getFavorites(req, res)).rejects.toThrow("API down");
 	});
 });
