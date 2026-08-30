@@ -1,8 +1,8 @@
 import { Router } from "express";
-import { weatherController } from "../controllers/weatherController.js";
+import { getWeather } from "../controllers/weatherController.js";
 
 const weatherRoutes = Router();
 
-weatherRoutes.get("/:city", weatherController);
+weatherRoutes.get("/:city", getWeather);
 
 export { weatherRoutes };

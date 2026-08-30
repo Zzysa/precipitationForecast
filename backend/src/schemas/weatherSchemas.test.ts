@@ -1,5 +1,10 @@
 import { it, describe, expect } from "vitest";
-import { CityIdParamsSchema, CityParamsSchema } from "./weatherSchemas.js";
+import {
+	CityIdParamsSchema,
+	CityParamsSchema,
+	CreateFavoriteBodySchema,
+} from "./weatherSchemas.js";
+import { ZodError } from "zod";
 
 const city = { city: "     New York    " };
 
@@ -12,12 +17,14 @@ describe("CityParamsSchema", () => {
 		expect(() => CityParamsSchema.parse({ city: 111 })).toThrow();
 	});
 
-    it("city recives nothing", () => {
-		expect(() => CityParamsSchema.parse({ })).toThrow();
+	it("city recives nothing", () => {
+		expect(() => CityParamsSchema.parse({})).toThrow();
 	});
 
-    it("city recives many cities", () => {
-		expect(() => CityParamsSchema.parse({ city: ["New York", "Gdansk"] })).toThrow();
+	it("city recives many cities", () => {
+		expect(() =>
+			CityParamsSchema.parse({ city: ["New York", "Gdansk"] }),
+		).toThrow();
 	});
 });
 
@@ -44,5 +51,53 @@ describe("CityIdParamsSchema", () => {
 		expect(() => CityIdParamsSchema.parse({ cityId: "0" })).toThrow(
 			"City id must be a positive number",
 		);
+	});
+});
+
+describe("CreateFavoriteBodySchema", () => {
+	const valid = {
+		name: "Gdansk",
+		state: null,
+		country: "PL",
+		lat: 54.352,
+		lon: 18.6466,
+	};
+
+	it("parses valid body", () => {
+		expect(CreateFavoriteBodySchema.parse(valid)).toEqual(valid);
+	});
+
+	it("reject a non-object", () => {
+		expect(() => CreateFavoriteBodySchema.parse(123)).toThrow();
+	});
+
+	it("reject a numeric name", () => {
+		expect(() =>
+			CreateFavoriteBodySchema.parse({ ...valid, name: 123 }),
+		).toThrow();
+	});
+
+	it("reject a numeric state", () => {
+		expect(() =>
+			CreateFavoriteBodySchema.parse({ ...valid, state: 123 }),
+		).toThrow();
+	});
+
+	it("reject a non-numeric lat", () => {
+		expect(() =>
+			CreateFavoriteBodySchema.parse({ ...valid, lat: "123" }),
+		).toThrow();
+	});
+
+	it("reject a non-numeric lon", () => {
+		expect(() =>
+			CreateFavoriteBodySchema.parse({ ...valid, lon: "123" }),
+		).toThrow();
+	});
+
+	it("reject a numeric country", () => {
+		expect(() =>
+			CreateFavoriteBodySchema.parse({ ...valid, country: 123 }),
+		).toThrow();
 	});
 });

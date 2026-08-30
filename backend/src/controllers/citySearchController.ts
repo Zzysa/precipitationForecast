@@ -1,5 +1,6 @@
 import type { Request, Response } from "express";
 import { getCitySearchByCityAndCountry } from "../services/citySearchService.js";
+import { CitySearchQuerySchema } from "../schemas/weatherSchemas.js";
 
 const getCitySearch = async (req: Request, res: Response) => {
     const {city, country} = CitySearchQuerySchema.parse(req.query)
