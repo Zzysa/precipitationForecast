@@ -24,9 +24,18 @@ interface WeatherResponseDTO {
 	hourlyAirPollution: HourlyAirPollutionPoint[] | null;
 }
 
+interface CitySearchResultDTO {
+	name: string;
+	state: string | null;
+	country: string;
+	lat: number;
+	lon: number;
+}
+
 export type {
 	WeatherResponseDTO,
 	HourlyForecastPoint,
 	CurrentWeather,
 	HourlyAirPollutionPoint,
+	CitySearchResultDTO,
 };

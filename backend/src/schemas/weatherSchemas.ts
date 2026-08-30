@@ -14,4 +14,16 @@ const CityIdParamsSchema = z.object({
 		.positive({ error: "City id must be a positive number" }),
 });
 
+const CitySearchQuerySchema = z.object({
+	city: z
+	  .string({ error: "Only one city name must be provided" })
+	  .trim()
+	  .min(1, { error: "City name cannot be empty" }),
+	country: z
+	  .string({ error: "Only one city name must be provided" })
+	  .trim()
+	  .min(2)
+	  .optional(),
+  });
+
 export { CityParamsSchema, CityIdParamsSchema };
