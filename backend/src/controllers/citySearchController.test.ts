@@ -17,18 +17,24 @@ const res = {
 
 const expectedCities = [
 	{
+		cityId: null,
 		name: "Springfield",
 		state: "Illinois",
 		country: "US",
 		lat: 39.8017,
 		lon: -89.6436,
+		isFavorite: false,
+		isInSearchHistory: false,
 	},
 	{
+		cityId: null,
 		name: "Gdansk",
 		state: null,
 		country: "PL",
 		lat: 54.352,
 		lon: 18.6466,
+		isFavorite: false,
+		isInSearchHistory: false,
 	},
 ];
 
