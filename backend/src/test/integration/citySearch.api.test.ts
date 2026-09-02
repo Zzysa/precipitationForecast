@@ -21,6 +21,23 @@ const geocodingResponse: OWGeocodingResponse = [
 	},
 ];
 
+const aggregatedGeocodingResponse: OWGeocodingResponse = [
+	{
+		name: "Gdańsk",
+		state: "Pomeranian Voivodeship",
+		country: "PL",
+		lat: 54.3722,
+		lon: 18.6383,
+	},
+	{
+		name: "Sopot",
+		state: "Pomeranian Voivodeship",
+		country: "PL",
+		lat: 54.4416,
+		lon: 18.5601,
+	},
+];
+
 const mockResponse = (data: unknown, ok = true) => ({
 	ok,
 	json: vi.fn().mockResolvedValue(data),
@@ -75,6 +92,108 @@ describe("GET /api/city-search", () => {
 					lon: -88.2154,
 					isFavorite: false,
 					isInSearchHistory: false,
+				},
+			],
+		});
+	});
+
+	it("merges favorite, history and OpenWeather results", async () => {
+		const demoUser = await prisma.user.findUniqueOrThrow({
+			where: { username: "demo" },
+		});
+		const savedCity = await prisma.city.create({
+			data: {
+				name: "Gdansk",
+				state: null,
+				country: "PL",
+				lat: 54.352,
+				lon: 18.6466,
+			},
+		});
+		await prisma.favorite.create({
+			data: {
+				userId: demoUser.id,
+				cityId: savedCity.id,
+			},
+		});
+		await prisma.searchHistory.create({
+			data: {
+				userId: demoUser.id,
+				cityId: savedCity.id,
+			},
+		});
+		fetchMock.mockResolvedValueOnce(
+			mockResponse(aggregatedGeocodingResponse),
+		);
+
+		const res = await request(app)
+			.get("/api/city-search")
+			.query({ city: "Gdansk", country: "PL" });
+
+		expect(res.status).toBe(200);
+		expect(res.body).toEqual({
+			cities: [
+				{
+					cityId: savedCity.id,
+					name: "Gdansk",
+					state: "Pomeranian Voivodeship",
+					country: "PL",
+					lat: 54.352,
+					lon: 18.6466,
+					isFavorite: true,
+					isInSearchHistory: true,
+				},
+				{
+					cityId: null,
+					name: "Sopot",
+					state: "Pomeranian Voivodeship",
+					country: "PL",
+					lat: 54.4416,
+					lon: 18.5601,
+					isFavorite: false,
+					isInSearchHistory: false,
+				},
+			],
+		});
+	});
+
+	it("returns local results when OpenWeather returns nothing", async () => {
+		const demoUser = await prisma.user.findUniqueOrThrow({
+			where: { username: "demo" },
+		});
+		const savedCity = await prisma.city.create({
+			data: {
+				name: "Moscow",
+				state: null,
+				country: "RU",
+				lat: 55.7522,
+				lon: 37.6156,
+			},
+		});
+		await prisma.searchHistory.create({
+			data: {
+				userId: demoUser.id,
+				cityId: savedCity.id,
+			},
+		});
+		fetchMock.mockResolvedValueOnce(mockResponse([]));
+
+		const res = await request(app)
+			.get("/api/city-search")
+			.query({ city: "Mosc", country: "RU" });
+
+		expect(res.status).toBe(200);
+		expect(res.body).toEqual({
+			cities: [
+				{
+					cityId: savedCity.id,
+					name: "Moscow",
+					state: null,
+					country: "RU",
+					lat: 55.7522,
+					lon: 37.6156,
+					isFavorite: false,
+					isInSearchHistory: true,
 				},
 			],
 		});

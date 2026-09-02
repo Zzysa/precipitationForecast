@@ -136,6 +136,7 @@ const getCitySearchByCityAndCountry = async (
 		favoritesRaw.map(({ city }) => city),
 		{ isFavorite: true, isInSearchHistory: false },
 	);
+	
 	const searchHistory = mapCitiesToSearchResults(
 		searchHistoryRaw.map(({ city }) => city),
 		{ isFavorite: false, isInSearchHistory: true },

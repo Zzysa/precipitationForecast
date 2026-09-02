@@ -1,4 +1,5 @@
 import type { OWGeocodingResponse } from "../dtos/openWeather.dto.js";
+import type { City } from "@prisma/client";
 import { describe, expect, it } from "vitest";
 import { mapCitiesToSearchResults } from "./citySearch.mapper.js";
 
@@ -53,5 +54,34 @@ describe("mapCitiesToSearchResults", () => {
 
 	it("returns an empty array when data is empty ", () => {
 		expect(mapCitiesToSearchResults([], flags)).toEqual([]);
+	});
+
+	it("maps a stored city with its id and flags", () => {
+		const storedCity: City = {
+			id: 7,
+			name: "Gdansk",
+			state: null,
+			country: "PL",
+			lat: 54.352,
+			lon: 18.6466,
+		};
+
+		expect(
+			mapCitiesToSearchResults([storedCity], {
+				isFavorite: true,
+				isInSearchHistory: true,
+			}),
+		).toEqual([
+			{
+				cityId: 7,
+				name: "Gdansk",
+				state: null,
+				country: "PL",
+				lat: 54.352,
+				lon: 18.6466,
+				isFavorite: true,
+				isInSearchHistory: true,
+			},
+		]);
 	});
 });
