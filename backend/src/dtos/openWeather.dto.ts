@@ -22,7 +22,7 @@ interface OWForecastHourly {
 interface OWForecastResponse {
 	list: OWForecastHourly[];
 	city: {
-		name: string
+		name: string;
 		country: string;
 		coord: {
 			lat: number;
@@ -42,8 +42,19 @@ interface OWAirPollutionResponse {
 	list: OWAirPollutionHourly[];
 }
 
+interface OWGeocodingCity {
+	name: string;
+	lat: number;
+	lon: number;
+	country: string;
+	state?: string;
+}
+
+type OWGeocodingResponse = OWGeocodingCity[]
+
 export type {
 	OWCurrentWeatherResponse,
 	OWForecastResponse,
 	OWAirPollutionResponse,
+	OWGeocodingResponse,
 };

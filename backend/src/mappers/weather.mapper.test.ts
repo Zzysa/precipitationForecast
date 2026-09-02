@@ -10,13 +10,15 @@ import {
 	calculateAvgTempByPeriod,
 } from "./weather.mapper.js";
 import { forecast, currentWeather, airPollution } from "../test/fixtures.js";
+import type { OWForecastResponse } from "../dtos/openWeather.dto.js";
 
-const emptyListForecast = { city: { coord: { lat: 0, lon: 0 } }, list: [] };
+const emptyListForecast: OWForecastResponse = {
+	city: { name: "Gdansk", country: "PL", coord: { lat: 0, lon: 0 } },
+	list: [],
+};
 
-const listForecast24Elements = {
-	city: {
-		coord: { lat: 0, lon: 0 },
-	},
+const listForecast24Elements: OWForecastResponse = {
+	city: { name: "Gdansk", country: "PL", coord: { lat: 0, lon: 0 } },
 	list: Array.from({ length: 30 }, (_, i) => ({
 		dt: 1710000000 + i,
 		main: { temp: i },
