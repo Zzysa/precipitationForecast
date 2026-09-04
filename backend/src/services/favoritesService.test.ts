@@ -48,6 +48,7 @@ vi.mocked(prisma.favorite.findMany).mockResolvedValueOnce(favorite);
 vi.mocked(prisma.user.findUniqueOrThrow).mockResolvedValue({
 	id: 7,
 	username: "demo",
+	passwordHash: "hashed-password",
 });
 
 vi.mocked(prisma.city.upsert).mockResolvedValue(savedCity);

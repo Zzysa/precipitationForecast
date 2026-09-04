@@ -2,6 +2,9 @@ import { beforeEach, expect, describe, it, afterAll } from "vitest";
 import { prisma } from "../../db/prisma.js";
 import { app } from "../../server.js";
 import request from "supertest";
+import * as argon2 from "argon2";
+
+const passwordHash = await argon2.hash("test-password-123");
 
 beforeEach(async () => {
 	await prisma.favorite.deleteMany();
@@ -9,8 +12,8 @@ beforeEach(async () => {
 	await prisma.city.deleteMany();
 	await prisma.user.upsert({
 		where: { username: "demo" },
-		update: {},
-		create: { username: "demo" },
+		update: { passwordHash },
+		create: { username: "demo", passwordHash },
 	});
 });
 

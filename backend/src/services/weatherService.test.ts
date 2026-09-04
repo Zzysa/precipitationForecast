@@ -32,6 +32,7 @@ beforeEach(() => {
 	vi.mocked(prisma.user.findUniqueOrThrow).mockResolvedValue({
 		id: 1,
 		username: "demo",
+		passwordHash: "hashed-password",
 	});
 	vi.mocked(prisma.city.upsert).mockResolvedValue({
 		id: 1,
@@ -154,7 +155,7 @@ describe("weatherService", () => {
 	it("do not call city and search history upsert when forecast is failed", async () => {
 		mockFetchAll(null, null, null);
 
-		await expect(getWeatherByCity(city)).rejects.toThrow("error")
+		await expect(getWeatherByCity(city)).rejects.toThrow("error");
 
 		expect(prisma.user.findUniqueOrThrow).not.toHaveBeenCalled();
 		expect(prisma.city.upsert).not.toHaveBeenCalled();

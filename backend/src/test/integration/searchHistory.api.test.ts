@@ -2,14 +2,17 @@ import { it, expect, describe, beforeEach, afterAll } from "vitest";
 import request from "supertest";
 import { app } from "../../server.js";
 import { prisma } from "../../db/prisma.js";
+import * as argon2 from "argon2";
+
+const passwordHash = await argon2.hash("test-password-123");
 
 beforeEach(async () => {
 	await prisma.searchHistory.deleteMany();
 	await prisma.city.deleteMany();
 	await prisma.user.upsert({
 		where: { username: "demo" },
-		update: {},
-		create: { username: "demo" },
+		update: { passwordHash },
+		create: { username: "demo", passwordHash },
 	});
 });
 
@@ -91,9 +94,7 @@ describe("DELETE /api/search-history/:cityId", () => {
 			},
 		});
 
-		const res = await request(app).delete(
-			`/api/search-history/${city.id}`,
-		);
+		const res = await request(app).delete(`/api/search-history/${city.id}`);
 
 		const count = await prisma.searchHistory.count({
 			where: {

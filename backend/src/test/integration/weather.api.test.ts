@@ -5,6 +5,9 @@ import { mapToWeatherDTO } from "../../mappers/weather.mapper.js";
 import { airPollution, currentWeather, forecast } from "../fixtures.js";
 import { fetchMock, mockFetchAll, stubFetch } from "../mockFetch.js";
 import { prisma } from "../../db/prisma.js";
+import * as argon2 from "argon2";
+
+const passwordHash = await argon2.hash("test-password-123");
 
 stubFetch();
 
@@ -14,8 +17,8 @@ beforeEach(async () => {
 	await prisma.city.deleteMany();
 	await prisma.user.upsert({
 		where: { username: "demo" },
-		update: {},
-		create: { username: "demo" },
+		update: { passwordHash },
+		create: { username: "demo", passwordHash },
 	});
 });
 

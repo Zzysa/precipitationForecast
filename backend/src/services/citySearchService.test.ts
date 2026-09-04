@@ -186,6 +186,7 @@ beforeEach(() => {
 	vi.mocked(prisma.user.findUniqueOrThrow).mockResolvedValue({
 		id: 7,
 		username: "demo",
+		passwordHash: "passwordHash"
 	});
 	vi.mocked(prisma.favorite.findMany).mockResolvedValue([]);
 	vi.mocked(prisma.searchHistory.findMany).mockResolvedValue([]);

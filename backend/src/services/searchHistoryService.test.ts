@@ -29,6 +29,7 @@ vi.mock("../db/prisma.js", () => ({
 vi.mocked(prisma.user.findUniqueOrThrow).mockResolvedValue({
 	id: 7,
 	username: "demo",
+	passwordHash: "hashed-password",
 });
 
 vi.mocked(prisma.searchHistory.findMany).mockResolvedValue(expectedHistory);

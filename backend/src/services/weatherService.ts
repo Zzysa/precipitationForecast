@@ -69,7 +69,7 @@ const getWeatherByCity = async (city: string): Promise<WeatherResponseDTO> => {
 
 	const savedCity = await prisma.city.upsert({
 		where: { lat_lon: { lat, lon } },
-		update: { name, country},
+		update: { name, country },
 		create: { name: name, lat, lon, state: null, country },
 		select: { id: true },
 	});

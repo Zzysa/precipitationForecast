@@ -4,6 +4,9 @@ import { prisma } from "../../db/prisma.js";
 import type { OWGeocodingResponse } from "../../dtos/openWeather.dto.js";
 import { app } from "../../server.js";
 import { fetchMock, stubFetch } from "../mockFetch.js";
+import * as argon2 from "argon2";
+
+const passwordHash = await argon2.hash("test-password-123");
 
 const geocodingResponse: OWGeocodingResponse = [
 	{
@@ -53,8 +56,8 @@ beforeEach(async () => {
 	await prisma.city.deleteMany();
 	await prisma.user.upsert({
 		where: { username: "demo" },
-		update: {},
-		create: { username: "demo" },
+		update: { passwordHash },
+		create: { username: "demo", passwordHash },
 	});
 });
 
@@ -122,9 +125,7 @@ describe("GET /api/city-search", () => {
 				cityId: savedCity.id,
 			},
 		});
-		fetchMock.mockResolvedValueOnce(
-			mockResponse(aggregatedGeocodingResponse),
-		);
+		fetchMock.mockResolvedValueOnce(mockResponse(aggregatedGeocodingResponse));
 
 		const res = await request(app)
 			.get("/api/city-search")

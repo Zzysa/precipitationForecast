@@ -28,7 +28,4 @@ const deleteSearchHistoryByCityIdForDemoUser = async (cityId: number) => {
 	});
 };
 
-export {
-	getSearchHistoryForDemoUser,
-	deleteSearchHistoryByCityIdForDemoUser,
-};
+export { getSearchHistoryForDemoUser, deleteSearchHistoryByCityIdForDemoUser };
