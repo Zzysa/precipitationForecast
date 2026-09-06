@@ -1,6 +1,6 @@
 import type { Request, Response } from "express";
-import { registerUser } from "../services/authService.js";
-import { RegisterBodySchema } from "../schemas/authSchemas.js";
+import { loginUser, registerUser } from "../services/authService.js";
+import { LoginBodySchema, RegisterBodySchema } from "../schemas/authSchemas.js";
 
 const register = async (req: Request, res: Response) => {
 	const input = RegisterBodySchema.parse(req.body);
@@ -10,4 +10,11 @@ const register = async (req: Request, res: Response) => {
 	res.status(201).send();
 };
 
-export { register };
+const login = async (req: Request, res: Response) => {
+	const input = LoginBodySchema.parse(req.body);
+	const accessToken = await loginUser(input);
+
+	res.status(200).json({ accessToken });
+};
+
+export { register, login };

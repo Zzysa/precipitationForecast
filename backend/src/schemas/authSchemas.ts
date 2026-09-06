@@ -14,5 +14,8 @@ const RegisterBodySchema = z.object({
 
 type RegisterBodyType = z.infer<typeof RegisterBodySchema>;
 
-export type { RegisterBodyType };
-export { RegisterBodySchema };
+const LoginBodySchema = RegisterBodySchema;
+type LoginBodyType = RegisterBodyType;
+
+export type { RegisterBodyType, LoginBodyType };
+export { RegisterBodySchema, LoginBodySchema };
