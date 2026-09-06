@@ -1,4 +1,4 @@
-import { z, ZodError } from "zod";
+import { z } from "zod";
 import { errorHandler } from "./errorHandler.js";
 import { it, describe, expect, vi, beforeEach } from "vitest";
 import type { Request, Response } from "express";
