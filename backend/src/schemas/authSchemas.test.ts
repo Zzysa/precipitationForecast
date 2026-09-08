@@ -1,4 +1,4 @@
-import { RegisterBodySchema } from "./authSchemas.js";
+import { LoginBodySchema, RegisterBodySchema } from "./authSchemas.js";
 import { describe, it, expect } from "vitest";
 
 describe("RegisterBodySchema", () => {
@@ -30,9 +30,9 @@ describe("RegisterBodySchema", () => {
 	});
 
 	it("rejects a numeric username", () => {
-		expect(() =>
-			RegisterBodySchema.parse({ ...valid, username: 123 }),
-		).toThrow("Username must be a string");
+		expect(() => RegisterBodySchema.parse({ ...valid, username: 123 })).toThrow(
+			"Username must be a string",
+		);
 	});
 
 	it("rejects a username shorter than 3 characters", () => {
@@ -51,9 +51,9 @@ describe("RegisterBodySchema", () => {
 	});
 
 	it("rejects a numeric password", () => {
-		expect(() =>
-			RegisterBodySchema.parse({ ...valid, password: 123 }),
-		).toThrow("Password must be a string");
+		expect(() => RegisterBodySchema.parse({ ...valid, password: 123 })).toThrow(
+			"Password must be a string",
+		);
 	});
 
 	it("rejects a password shorter than 12 characters", () => {
@@ -69,5 +69,9 @@ describe("RegisterBodySchema", () => {
 				password: "p".repeat(129),
 			}),
 		).toThrow("Password must contain at most 128 characters");
+	});
+
+	it("shares the register schema", () => {
+		expect(LoginBodySchema).toBe(RegisterBodySchema);
 	});
 });

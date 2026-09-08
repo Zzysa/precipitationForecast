@@ -55,3 +55,32 @@ describe("POST /api/auth/register", () => {
 		expect(await prisma.user.count()).toBe(0);
 	});
 });
+
+describe("POST /api/auth/login", () => {
+	process.env.JWT_SECRET = "secret";
+
+	it("logins user", async () => {
+		await request(app).post("/api/auth/register").send(body);
+		const res = await request(app).post("/api/auth/login").send(body);
+
+		expect(res.status).toBe(200);
+		expect(res.body.accessToken).toBeTypeOf("string");
+	});
+
+	it("throw if password is not correct", async () => {
+		await request(app).post("/api/auth/register").send(body);
+		const res = await request(app)
+			.post("/api/auth/login")
+			.send({ ...body, password: "wrong-password" });
+
+		expect(res.status).toBe(500);
+		expect(res.body.error).toEqual("Invalid credentials");
+	});
+
+	it("throw if body is empty", async () => {
+		const res = await request(app).post("/api/auth/login").send();
+
+		expect(res.status).toBe(400);
+		expect(res.body.error).toEqual(expect.any(Array));
+	})
+});
