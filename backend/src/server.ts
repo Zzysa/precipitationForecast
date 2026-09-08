@@ -3,7 +3,7 @@ import cors from "cors";
 import { weatherRoutes } from "./routes/weatherRoutes.js";
 import { searchHistoryRoutes } from "./routes/searchHistoryRoutes.js";
 import { favoritesRoutes } from "./routes/favoritesRoutes.js";
-import { errorHandler } from "./errorHandler.js";
+import { errorHandler } from "./middlewares/errorHandler.js";
 import { citySearchRoutes } from "./routes/citySearchRoutes.js";
 import { authRoutes } from "./routes/authRoutes.js";
 

@@ -29,4 +29,11 @@ const loginUser = async (input: LoginBodyType) => {
 	return createToken(user.id);
 };
 
-export { registerUser, loginUser };
+const getMeById = async (userId: number) => {
+	return prisma.user.findUniqueOrThrow({
+		where: { id: userId },
+		select: { id: true, username: true },
+	});
+};
+
+export { registerUser, loginUser, getMeById };
