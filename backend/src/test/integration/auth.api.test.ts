@@ -4,6 +4,8 @@ import * as argon2 from "argon2";
 import { prisma } from "../../db/prisma.js";
 import { app } from "../../server.js";
 
+process.env.JWT_SECRET = "secret";
+
 const body = {
 	username: "john",
 	password: "password-strong",
@@ -57,8 +59,6 @@ describe("POST /api/auth/register", () => {
 });
 
 describe("POST /api/auth/login", () => {
-	process.env.JWT_SECRET = "secret";
-
 	it("logins user", async () => {
 		await request(app).post("/api/auth/register").send(body);
 		const res = await request(app).post("/api/auth/login").send(body);
@@ -82,5 +82,44 @@ describe("POST /api/auth/login", () => {
 
 		expect(res.status).toBe(400);
 		expect(res.body.error).toEqual(expect.any(Array));
-	})
+	});
+});
+
+describe("GET /api/auth/me", () => {
+	it("returns the current user", async () => {
+		await request(app).post("/api/auth/register").send(body);
+		const loginRes = await request(app).post("/api/auth/login").send(body);
+		const savedUser = await prisma.user.findUniqueOrThrow({
+			where: { username: body.username },
+			select: { id: true, username: true },
+		});
+
+		const res = await request(app)
+			.get("/api/auth/me")
+			.set("Authorization", `Bearer ${loginRes.body.accessToken}`);
+
+		expect(res.status).toBe(200);
+		expect(res.body).toEqual({
+			user: {
+				id: savedUser.id,
+				username: savedUser.username,
+			},
+		});
+	});
+
+	it("returns 401 when the token is missing", async () => {
+		const res = await request(app).get("/api/auth/me");
+
+		expect(res.status).toBe(401);
+		expect(res.body).toEqual({ error: "Authentication required" });
+	});
+
+	it("returns 401 when the token is invalid", async () => {
+		const res = await request(app)
+			.get("/api/auth/me")
+			.set("Authorization", "Bearer not-a-jwt");
+
+		expect(res.status).toBe(401);
+		expect(res.body).toEqual({ error: "Authentication required" });
+	});
 });

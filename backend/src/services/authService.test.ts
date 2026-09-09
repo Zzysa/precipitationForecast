@@ -1,7 +1,7 @@
 import { prisma } from "../db/prisma.js";
 import { vi, describe, it, expect, beforeEach } from "vitest";
 import * as argon2 from "argon2";
-import { loginUser, registerUser } from "./authService.js";
+import { getMeById, loginUser, registerUser } from "./authService.js";
 import { createToken } from "../auth/token.js";
 
 const savedUser = {
@@ -20,6 +20,7 @@ vi.mock("../db/prisma.js", () => ({
 		user: {
 			create: vi.fn(),
 			findUnique: vi.fn(),
+			findUniqueOrThrow: vi.fn(),
 		},
 	},
 }));
@@ -91,5 +92,26 @@ describe("loginUser", () => {
 		});
 		expect(argon2.verify).toHaveBeenCalledWith("hashed-password", "password");
 		expect(createToken).not.toHaveBeenCalled();
+	});
+});
+
+describe("getMeById", () => {
+	it("returns user by the id", async () => {
+		vi.mocked(prisma.user.findUniqueOrThrow).mockResolvedValueOnce(savedUser);
+
+		const user = await getMeById(savedUser.id);
+
+		expect(prisma.user.findUniqueOrThrow).toHaveBeenCalledWith({
+			where: { id: savedUser.id },
+			select: { id: true, username: true },
+		});
+	});
+
+	it("returns user by the id", async () => {
+		vi.mocked(prisma.user.findUniqueOrThrow).mockRejectedValueOnce(
+			new Error("No record was found"),
+		);
+
+		await expect(getMeById(7)).rejects.toThrow("No record was found");
 	});
 });

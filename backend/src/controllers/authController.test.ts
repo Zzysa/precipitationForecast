@@ -1,8 +1,9 @@
 import type { Request, Response } from "express";
 import { vi, expect, describe, it, beforeEach } from "vitest";
 import { ZodError } from "zod";
-import { login, register } from "./authController.js";
-import { loginUser, registerUser } from "../services/authService.js";
+import { getMe, login, register } from "./authController.js";
+import { getMeById, loginUser, registerUser } from "../services/authService.js";
+import { prisma } from "../db/prisma.js";
 
 let req = {
 	body: {
@@ -20,6 +21,15 @@ const res = {
 vi.mock("../services/authService.js", () => ({
 	registerUser: vi.fn(),
 	loginUser: vi.fn(),
+	getMeById: vi.fn(),
+}));
+
+vi.mock("../db/prisma.js", () => ({
+	prisma: {
+		user: {
+			findUniqueOrThrow: vi.fn(),
+		},
+	},
 }));
 
 beforeEach(() => {
@@ -95,5 +105,32 @@ describe("login", () => {
 	it("propagates service error", async () => {
 		vi.mocked(loginUser).mockRejectedValueOnce(new Error("Error"));
 		await expect(login(req, res)).rejects.toThrow("Error");
+	});
+});
+
+describe("getMe", () => {
+	it("returns user by the id", async () => {
+		const user = {
+			id: 7,
+			username: "john",
+		};
+
+		req = { user: { id: 7 } } as unknown as Request;
+		vi.mocked(getMeById).mockResolvedValueOnce(user);
+
+		await getMe(req, res);
+
+		expect(getMeById).toHaveBeenCalledWith(7);
+		expect(res.status).toHaveBeenCalledWith(200);
+		expect(res.json).toHaveBeenCalledWith({ user });
+	});
+
+	it("throw when user is incorrect", async () => {
+		req = { user: { id: 7 } } as unknown as Request;
+		vi.mocked(getMeById).mockRejectedValueOnce(
+			new Error("No record was found"),
+		);
+
+		await expect(getMe(req, res)).rejects.toThrow("No record was found");
 	});
 });
