@@ -6,6 +6,7 @@ import { airPollution, currentWeather, forecast } from "../fixtures.js";
 import { fetchMock, mockFetchAll, stubFetch } from "../mockFetch.js";
 import { prisma } from "../../db/prisma.js";
 import * as argon2 from "argon2";
+import { getAccessToken } from "../auth.js";
 
 const passwordHash = await argon2.hash("test-password-123");
 
@@ -13,6 +14,7 @@ stubFetch();
 
 beforeEach(async () => {
 	fetchMock.mockReset();
+	await prisma.favorite.deleteMany();
 	await prisma.searchHistory.deleteMany();
 	await prisma.city.deleteMany();
 	await prisma.user.upsert({
@@ -24,6 +26,10 @@ beforeEach(async () => {
 
 afterAll(async () => {
 	await prisma.$disconnect();
+});
+
+const authHeader = async () => ({
+	Authorization: `Bearer ${await getAccessToken("demo")}`,
 });
 
 describe("/api/weather/:city", () => {
@@ -54,10 +60,21 @@ describe("/api/weather/:city", () => {
 		expect(res.body).toEqual({ error: "error" });
 	});
 
-	it("persists a city after a successful forecast", async () => {
+	it("does not persist city or history for a guest", async () => {
 		mockFetchAll(forecast, null, null);
 
 		await request(app).get("/api/weather/Gdansk");
+
+		expect(await prisma.city.count()).toBe(0);
+		expect(await prisma.searchHistory.count()).toBe(0);
+	});
+
+	it("persists a city after a successful forecast for an authenticated user", async () => {
+		mockFetchAll(forecast, null, null);
+
+		await request(app)
+			.get("/api/weather/Gdansk")
+			.set(await authHeader());
 
 		const savedCity = await prisma.city.findUnique({
 			where: { lat_lon: { lat: 52.52, lon: 13.41 } },
@@ -74,8 +91,12 @@ describe("/api/weather/:city", () => {
 	it("does not duplicate an existing city", async () => {
 		mockFetchAll(forecast, null, null);
 
-		await request(app).get("/api/weather/Gdansk");
-		await request(app).get("/api/weather/Gdansk");
+		await request(app)
+			.get("/api/weather/Gdansk")
+			.set(await authHeader());
+		await request(app)
+			.get("/api/weather/Gdansk")
+			.set(await authHeader());
 
 		const count = await prisma.city.count({
 			where: { lat: 52.52, lon: 13.41 },
@@ -87,7 +108,9 @@ describe("/api/weather/:city", () => {
 	it("does not persist a city when forecast fails", async () => {
 		mockFetchAll(null, null, null);
 
-		await request(app).get("/api/weather/Gdansk");
+		await request(app)
+			.get("/api/weather/Gdansk")
+			.set(await authHeader());
 
 		const count = await prisma.city.count({
 			where: { lat: 52.52, lon: 13.41 },
@@ -99,7 +122,9 @@ describe("/api/weather/:city", () => {
 	it("persists a search city row after a successful forecast", async () => {
 		mockFetchAll(forecast, null, null);
 
-		await request(app).get("/api/weather/Gdansk");
+		await request(app)
+			.get("/api/weather/Gdansk")
+			.set(await authHeader());
 
 		const demoUser = await prisma.user.findUniqueOrThrow({
 			where: { username: "demo" },
@@ -122,7 +147,9 @@ describe("/api/weather/:city", () => {
 	it("change searched time for searchHistory while second call", async () => {
 		mockFetchAll(forecast, null, null);
 
-		await request(app).get("/api/weather/Gdansk");
+		await request(app)
+			.get("/api/weather/Gdansk")
+			.set(await authHeader());
 
 		const demoUser = await prisma.user.findUniqueOrThrow({
 			where: { username: "demo" },
@@ -142,7 +169,9 @@ describe("/api/weather/:city", () => {
 
 		const firstSearchedTime = firstSearchedTimeRes?.searchedAt;
 
-		await request(app).get("/api/weather/Gdansk");
+		await request(app)
+			.get("/api/weather/Gdansk")
+			.set(await authHeader());
 
 		const secondSearchedTimeRes = await prisma.searchHistory.findUnique({
 			where: {
@@ -165,7 +194,9 @@ describe("/api/weather/:city", () => {
 	it("does not persist a searchHistory row when forecast fails", async () => {
 		mockFetchAll(null, null, null);
 
-		await request(app).get("/api/weather/Gdansk");
+		await request(app)
+			.get("/api/weather/Gdansk")
+			.set(await authHeader());
 
 		const count = await prisma.searchHistory.count();
 

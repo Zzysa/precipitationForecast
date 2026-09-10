@@ -12,9 +12,6 @@ vi.mock("../db/prisma.js", () => ({
 		city: {
 			upsert: vi.fn(),
 		},
-		user: {
-			findUniqueOrThrow: vi.fn(),
-		},
 		searchHistory: {
 			upsert: vi.fn(),
 		},
@@ -22,18 +19,13 @@ vi.mock("../db/prisma.js", () => ({
 }));
 
 const city = "Gdansk";
+const userId = 1;
 
 beforeEach(() => {
 	fetchMock.mockReset();
 	vi.mocked(prisma.city.upsert).mockReset();
-	vi.mocked(prisma.user.findUniqueOrThrow).mockReset();
 	vi.mocked(prisma.searchHistory.upsert).mockReset();
 
-	vi.mocked(prisma.user.findUniqueOrThrow).mockResolvedValue({
-		id: 1,
-		username: "demo",
-		passwordHash: "hashed-password",
-	});
 	vi.mocked(prisma.city.upsert).mockResolvedValue({
 		id: 1,
 		name: city,
@@ -44,7 +36,7 @@ beforeEach(() => {
 	});
 	vi.mocked(prisma.searchHistory.upsert).mockResolvedValue({
 		id: 1,
-		userId: 1,
+		userId,
 		cityId: 1,
 		searchedAt: new Date(),
 	});
@@ -54,7 +46,7 @@ describe("weatherService", () => {
 	it("happy path", async () => {
 		mockFetchAll(forecast, currentWeather, airPollution);
 
-		const result = await getWeatherByCity(city);
+		const result = await getWeatherByCity(city, null);
 
 		expect(result).toStrictEqual(
 			mapToWeatherDTO(forecast, currentWeather, airPollution),
@@ -74,13 +66,13 @@ describe("weatherService", () => {
 	it("forecast is failed", async () => {
 		mockFetchAll(null, currentWeather, airPollution);
 
-		await expect(getWeatherByCity(city)).rejects.toThrow("error");
+		await expect(getWeatherByCity(city, userId)).rejects.toThrow("error");
 	});
 
 	it("current weather is failed", async () => {
 		mockFetchAll(forecast, null, airPollution);
 
-		const result = await getWeatherByCity(city);
+		const result = await getWeatherByCity(city, null);
 
 		expect(result).toStrictEqual(mapToWeatherDTO(forecast, null, airPollution));
 	});
@@ -88,7 +80,7 @@ describe("weatherService", () => {
 	it("air pollution is failed", async () => {
 		mockFetchAll(forecast, currentWeather, null);
 
-		const result = await getWeatherByCity(city);
+		const result = await getWeatherByCity(city, null);
 
 		expect(result).toStrictEqual(
 			mapToWeatherDTO(forecast, currentWeather, null),
@@ -98,20 +90,20 @@ describe("weatherService", () => {
 	it("air pollution and current weather is failed", async () => {
 		mockFetchAll(forecast, null, null);
 
-		const result = await getWeatherByCity(city);
+		const result = await getWeatherByCity(city, null);
 
 		expect(result).toStrictEqual(mapToWeatherDTO(forecast, null, null));
 	});
 
-	it("add to search history when forecast is fetched", async () => {
+	it("adds to search history when forecast is fetched for a user", async () => {
 		mockFetchAll(forecast, null, null);
 
-		await getWeatherByCity(city);
+		await getWeatherByCity(city, userId);
 
 		expect(prisma.searchHistory.upsert).toHaveBeenCalledWith({
 			where: {
 				userId_cityId: {
-					userId: 1,
+					userId,
 					cityId: 1,
 				},
 			},
@@ -119,16 +111,16 @@ describe("weatherService", () => {
 				searchedAt: expect.any(Date),
 			},
 			create: {
-				userId: 1,
+				userId,
 				cityId: 1,
 			},
 		});
 	});
 
-	it("add to city when forecast is fetched", async () => {
+	it("adds city when forecast is fetched for a user", async () => {
 		mockFetchAll(forecast, null, null);
 
-		await getWeatherByCity(city);
+		await getWeatherByCity(city, userId);
 
 		expect(prisma.city.upsert).toHaveBeenCalledWith({
 			where: {
@@ -152,12 +144,20 @@ describe("weatherService", () => {
 		});
 	});
 
+	it("does not persist city or search history for a guest", async () => {
+		mockFetchAll(forecast, null, null);
+
+		await getWeatherByCity(city, null);
+
+		expect(prisma.city.upsert).not.toHaveBeenCalled();
+		expect(prisma.searchHistory.upsert).not.toHaveBeenCalled();
+	});
+
 	it("do not call city and search history upsert when forecast is failed", async () => {
 		mockFetchAll(null, null, null);
 
-		await expect(getWeatherByCity(city)).rejects.toThrow("error");
+		await expect(getWeatherByCity(city, userId)).rejects.toThrow("error");
 
-		expect(prisma.user.findUniqueOrThrow).not.toHaveBeenCalled();
 		expect(prisma.city.upsert).not.toHaveBeenCalled();
 		expect(prisma.searchHistory.upsert).not.toHaveBeenCalled();
 	});

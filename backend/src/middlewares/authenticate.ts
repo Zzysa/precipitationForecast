@@ -29,4 +29,17 @@ const authenticate = async (
 	}
 };
 
-export { authenticate };
+const authenticateOptional = async (
+	req: Request,
+	res: Response,
+	next: NextFunction,
+) => {
+	const header = req.headers.authorization;
+	if (!header) {
+		next();
+		return;
+	}
+	await authenticate(req, res, next);
+};
+
+export { authenticate, authenticateOptional };

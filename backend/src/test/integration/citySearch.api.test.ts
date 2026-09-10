@@ -5,6 +5,7 @@ import type { OWGeocodingResponse } from "../../dtos/openWeather.dto.js";
 import { app } from "../../server.js";
 import { fetchMock, stubFetch } from "../mockFetch.js";
 import * as argon2 from "argon2";
+import { getAccessToken } from "../auth.js";
 
 const passwordHash = await argon2.hash("test-password-123");
 
@@ -63,6 +64,10 @@ beforeEach(async () => {
 
 afterAll(async () => {
 	await prisma.$disconnect();
+});
+
+const authHeader = async () => ({
+	Authorization: `Bearer ${await getAccessToken("demo")}`,
 });
 
 describe("GET /api/city-search", () => {
@@ -129,6 +134,7 @@ describe("GET /api/city-search", () => {
 
 		const res = await request(app)
 			.get("/api/city-search")
+			.set(await authHeader())
 			.query({ city: "Gdansk", country: "PL" });
 
 		expect(res.status).toBe(200);
@@ -181,6 +187,7 @@ describe("GET /api/city-search", () => {
 
 		const res = await request(app)
 			.get("/api/city-search")
+			.set(await authHeader())
 			.query({ city: "Mosc", country: "RU" });
 
 		expect(res.status).toBe(200);
@@ -198,6 +205,37 @@ describe("GET /api/city-search", () => {
 				},
 			],
 		});
+	});
+
+	it("does not merge local results for a guest", async () => {
+		const demoUser = await prisma.user.findUniqueOrThrow({
+			where: { username: "demo" },
+		});
+		const savedCity = await prisma.city.create({
+			data: {
+				name: "Gdansk",
+				state: null,
+				country: "PL",
+				lat: 54.352,
+				lon: 18.6466,
+			},
+		});
+		await prisma.favorite.create({
+			data: {
+				userId: demoUser.id,
+				cityId: savedCity.id,
+			},
+		});
+		fetchMock.mockResolvedValueOnce(mockResponse(geocodingResponse));
+
+		const res = await request(app)
+			.get("/api/city-search")
+			.query({ city: "Gdansk", country: "PL" });
+
+		expect(res.status).toBe(200);
+		expect(res.body.cities.every((city: { isFavorite: boolean }) => !city.isFavorite)).toBe(
+			true,
+		);
 	});
 
 	it("returns 400 for an empty city", async () => {

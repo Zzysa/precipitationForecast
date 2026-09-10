@@ -15,12 +15,10 @@ const login = async (req: Request, res: Response) => {
 	const accessToken = await loginUser(input);
 
 	res.status(200).json({ accessToken });
-};	
+};
 
 const getMe = async (req: Request, res: Response) => {
-	const userId = req.user.id;
-
-	const user = await getMeById(userId);
+	const user = await getMeById(req.user!.id);
 
 	res.status(200).json({ user });
 };

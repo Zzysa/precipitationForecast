@@ -5,7 +5,11 @@ import { CitySearchQuerySchema } from "../schemas/citySearchSchemas.js";
 const getCitySearch = async (req: Request, res: Response) => {
 	const { city, country } = CitySearchQuerySchema.parse(req.query);
 
-	const data = await getCitySearchByCityAndCountry(city, country);
+	const data = await getCitySearchByCityAndCountry(
+		city,
+		country,
+		req.user?.id ?? null,
+	);
 
 	res.status(200).json({ cities: data });
 };

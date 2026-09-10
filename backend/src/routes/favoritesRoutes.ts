@@ -4,11 +4,12 @@ import {
 	deleteFavorite,
 	getFavorites,
 } from "../controllers/favoritesController.js";
+import { authenticate } from "../middlewares/authenticate.js";
 
 const favoritesRoutes = Router();
 
-favoritesRoutes.post("/", createFavorite);
-favoritesRoutes.delete("/:cityId", deleteFavorite);
-favoritesRoutes.get("/", getFavorites);
+favoritesRoutes.post("/", authenticate, createFavorite);
+favoritesRoutes.delete("/:cityId", authenticate, deleteFavorite);
+favoritesRoutes.get("/", authenticate, getFavorites);
 
 export { favoritesRoutes };

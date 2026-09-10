@@ -12,6 +12,7 @@ export const setup = async () => {
 		.start();
 
 	process.env.DATABASE_URL = container.getConnectionUri();
+	process.env.JWT_SECRET ??= "secret";
 
 	execSync("npx prisma migrate deploy", {
 		cwd: process.cwd(),

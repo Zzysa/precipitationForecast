@@ -1,15 +1,17 @@
 import { vi, expect, describe, it } from "vitest";
 import { prisma } from "../db/prisma.js";
 import {
-	createFavoriteForDemoUser,
-	deleteFavoriteForDemoUser,
-	getFavoriteForDemoUser,
+	createFavoriteForUser,
+	deleteFavoriteForUser,
+	getFavoriteForUser,
 } from "./favoritesService.js";
 import type { CreateFavoriteInputType } from "../schemas/weatherSchemas.js";
 
+const userId = 7;
+
 const favorite = Array.from({ length: 10 }, (_, i) => ({
 	id: i + 1,
-	userId: 7,
+	userId,
 	cityId: i + 1,
 	createdAt: new Date(1710000000 + i),
 }));
@@ -29,9 +31,6 @@ const savedCity = {
 
 vi.mock("../db/prisma.js", () => ({
 	prisma: {
-		user: {
-			findUniqueOrThrow: vi.fn(),
-		},
 		city: {
 			upsert: vi.fn(),
 		},
@@ -44,23 +43,11 @@ vi.mock("../db/prisma.js", () => ({
 }));
 
 vi.mocked(prisma.favorite.findMany).mockResolvedValueOnce(favorite);
-
-vi.mocked(prisma.user.findUniqueOrThrow).mockResolvedValue({
-	id: 7,
-	username: "demo",
-	passwordHash: "hashed-password",
-});
-
 vi.mocked(prisma.city.upsert).mockResolvedValue(savedCity);
 
-describe("createFavoriteForDemoUser", () => {
-	it("create favorite for a demo user", async () => {
-		await createFavoriteForDemoUser(cityInput);
-
-		expect(prisma.user.findUniqueOrThrow).toHaveBeenCalledWith({
-			where: { username: "demo" },
-			select: { id: true },
-		});
+describe("createFavoriteForUser", () => {
+	it("creates favorite for the given user", async () => {
+		await createFavoriteForUser(cityInput, userId);
 
 		expect(prisma.city.upsert).toHaveBeenCalledWith({
 			where: { lat_lon: { lat: cityInput.lat, lon: cityInput.lon } },
@@ -78,55 +65,41 @@ describe("createFavoriteForDemoUser", () => {
 		expect(prisma.favorite.upsert).toHaveBeenCalledWith({
 			where: {
 				userId_cityId: {
-					userId: 7,
+					userId,
 					cityId: 8,
 				},
 			},
 			update: {},
 			create: {
-				userId: 7,
+				userId,
 				cityId: 8,
 			},
 		});
 	});
 });
 
-describe("deleteFavoriteForDemoUser", () => {
-	it("delete favorite row by city id", async () => {
+describe("deleteFavoriteForUser", () => {
+	it("deletes favorite row by city id for the given user", async () => {
 		const cityId = 15;
 
-		await deleteFavoriteForDemoUser(cityId);
-
-		expect(prisma.user.findUniqueOrThrow).toHaveBeenCalledWith({
-			where: {
-				username: "demo",
-			},
-			select: { id: true },
-		});
+		await deleteFavoriteForUser(cityId, userId);
 
 		expect(prisma.favorite.deleteMany).toHaveBeenCalledWith({
 			where: {
-				userId: 7,
+				userId,
 				cityId,
 			},
 		});
 	});
 });
 
-describe("getFavoriteForDemoUser", () => {
-	it("returns favorite cities for a demo user", async () => {
-		const result = await getFavoriteForDemoUser();
-
-		expect(prisma.user.findUniqueOrThrow).toHaveBeenCalledWith({
-			where: {
-				username: "demo",
-			},
-			select: { id: true },
-		});
+describe("getFavoriteForUser", () => {
+	it("returns favorite cities for the given user", async () => {
+		const result = await getFavoriteForUser(userId);
 
 		expect(prisma.favorite.findMany).toHaveBeenCalledWith({
 			where: {
-				userId: 7,
+				userId,
 			},
 			include: { city: true },
 			orderBy: { createdAt: "desc" },

@@ -13,7 +13,10 @@ const normalizeText = (value: string) =>
 		.trim()
 		.toLowerCase();
 
-const isSameCity = (first: CitySearchResultDTO, second: CitySearchResultDTO) => {
+const isSameCity = (
+	first: CitySearchResultDTO,
+	second: CitySearchResultDTO,
+) => {
 	const hasSameId =
 		first.cityId !== null &&
 		second.cityId !== null &&
@@ -95,12 +98,8 @@ const fetchCitySearch = async (city: string, country: string | null) => {
 const getCitySearchByCityAndCountry = async (
 	city: string,
 	country: string | null,
+	userId: number | null,
 ): Promise<CitySearchResultDTO[]> => {
-	const demoUser = await prisma.user.findUniqueOrThrow({
-		where: { username: "demo" },
-		select: { id: true },
-	});
-
 	const cityFilter = country
 		? {
 				name: { contains: city, mode: "insensitive" as const },
@@ -110,37 +109,42 @@ const getCitySearchByCityAndCountry = async (
 				name: { contains: city, mode: "insensitive" as const },
 			};
 
-	const favoritesRaw = await prisma.favorite.findMany({
-		where: {
-			userId: demoUser.id,
-			city: { is: cityFilter },
-		},
-		orderBy: { createdAt: "desc" },
-		include: { city: true },
-		take: 5,
-	});
+	let favorites: CitySearchResultDTO[] = [];
+	let searchHistory: CitySearchResultDTO[] = [];
 
-	const searchHistoryRaw = await prisma.searchHistory.findMany({
-		where: {
-			userId: demoUser.id,
-			city: { is: cityFilter },
-		},
-		include: { city: true },
-		orderBy: { searchedAt: "desc" },
-		take: 10,
-	});
+	if (userId !== null) {
+		const favoritesRaw = await prisma.favorite.findMany({
+			where: {
+				userId,
+				city: { is: cityFilter },
+			},
+			orderBy: { createdAt: "desc" },
+			include: { city: true },
+			take: 5,
+		});
+
+		favorites = mapCitiesToSearchResults(
+			favoritesRaw.map(({ city }) => city),
+			{ isFavorite: true, isInSearchHistory: false },
+		);
+
+		const searchHistoryRaw = await prisma.searchHistory.findMany({
+			where: {
+				userId,
+				city: { is: cityFilter },
+			},
+			include: { city: true },
+			orderBy: { searchedAt: "desc" },
+			take: 10,
+		});
+
+		searchHistory = mapCitiesToSearchResults(
+			searchHistoryRaw.map(({ city }) => city),
+			{ isFavorite: false, isInSearchHistory: true },
+		);
+	}
 
 	const openWeatherCitiesResponse = await fetchCitySearch(city, country);
-
-	const favorites = mapCitiesToSearchResults(
-		favoritesRaw.map(({ city }) => city),
-		{ isFavorite: true, isInSearchHistory: false },
-	);
-	
-	const searchHistory = mapCitiesToSearchResults(
-		searchHistoryRaw.map(({ city }) => city),
-		{ isFavorite: false, isInSearchHistory: true },
-	);
 
 	const openWeatherCitiesRaw =
 		(await openWeatherCitiesResponse.json()) as OWGeocodingResponse;
