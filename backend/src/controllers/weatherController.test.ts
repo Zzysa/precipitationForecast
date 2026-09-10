@@ -31,9 +31,21 @@ describe("getWeather", () => {
 
 		await getWeather(req, res);
 
-		expect(getWeatherByCity).toHaveBeenCalledWith("Gdansk");
+		expect(getWeatherByCity).toHaveBeenCalledWith("Gdansk", null);
 		expect(res.status).toHaveBeenCalledWith(200);
 		expect(res.json).toHaveBeenCalledWith({ city: fakeWeather });
+	});
+
+	it("passes user id when the request is authenticated", async () => {
+		const authenticatedReq = {
+			params: { city: "Gdansk" },
+			user: { id: 7 },
+		} as unknown as Request;
+		vi.mocked(getWeatherByCity).mockResolvedValue(fakeWeather);
+
+		await getWeather(authenticatedReq, res);
+
+		expect(getWeatherByCity).toHaveBeenCalledWith("Gdansk", 7);
 	});
 
 	it("throwing an error", async () => {

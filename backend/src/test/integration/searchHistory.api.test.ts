@@ -2,14 +2,19 @@ import { it, expect, describe, beforeEach, afterAll } from "vitest";
 import request from "supertest";
 import { app } from "../../server.js";
 import { prisma } from "../../db/prisma.js";
+import * as argon2 from "argon2";
+import { getAccessToken } from "../auth.js";
+
+const passwordHash = await argon2.hash("test-password-123");
 
 beforeEach(async () => {
+	await prisma.favorite.deleteMany();
 	await prisma.searchHistory.deleteMany();
 	await prisma.city.deleteMany();
 	await prisma.user.upsert({
 		where: { username: "demo" },
-		update: {},
-		create: { username: "demo" },
+		update: { passwordHash },
+		create: { username: "demo", passwordHash },
 	});
 });
 
@@ -17,8 +22,12 @@ afterAll(async () => {
 	await prisma.$disconnect();
 });
 
+const authHeader = async () => ({
+	Authorization: `Bearer ${await getAccessToken("demo")}`,
+});
+
 describe("GET /api/search-history", () => {
-	it("returns demouser's search history", async () => {
+	it("returns the authenticated user's search history", async () => {
 		const demoUser = await prisma.user.findUniqueOrThrow({
 			where: { username: "demo" },
 		});
@@ -39,7 +48,9 @@ describe("GET /api/search-history", () => {
 			},
 		});
 
-		const searchRes = await request(app).get("/api/search-history");
+		const searchRes = await request(app)
+			.get("/api/search-history")
+			.set(await authHeader());
 
 		expect(searchRes.status).toBe(200);
 		expect(searchRes.body).toEqual({
@@ -63,9 +74,18 @@ describe("GET /api/search-history", () => {
 	});
 
 	it("returns an empty history", async () => {
-		const res = await request(app).get("/api/search-history");
+		const res = await request(app)
+			.get("/api/search-history")
+			.set(await authHeader());
 		expect(res.status).toBe(200);
 		expect(res.body).toEqual({ history: [] });
+	});
+
+	it("returns 401 when the token is missing", async () => {
+		const res = await request(app).get("/api/search-history");
+
+		expect(res.status).toBe(401);
+		expect(res.body).toEqual({ error: "Authentication required" });
 	});
 });
 
@@ -91,9 +111,9 @@ describe("DELETE /api/search-history/:cityId", () => {
 			},
 		});
 
-		const res = await request(app).delete(
-			`/api/search-history/${city.id}`,
-		);
+		const res = await request(app)
+			.delete(`/api/search-history/${city.id}`)
+			.set(await authHeader());
 
 		const count = await prisma.searchHistory.count({
 			where: {
@@ -108,7 +128,9 @@ describe("DELETE /api/search-history/:cityId", () => {
 	});
 
 	it("returns 400 error if city id is invalid", async () => {
-		const res = await request(app).delete("/api/search-history/abc");
+		const res = await request(app)
+			.delete("/api/search-history/abc")
+			.set(await authHeader());
 
 		expect(res.status).toBe(400);
 		expect(res.body.error[0].message).toBe("City id must be a number");

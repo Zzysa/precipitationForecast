@@ -60,7 +60,11 @@ describe("getCitySearch", () => {
 
 		await getCitySearch(req, res);
 
-		expect(getCitySearchByCityAndCountry).toHaveBeenCalledWith("Gdansk", "PL");
+		expect(getCitySearchByCityAndCountry).toHaveBeenCalledWith(
+			"Gdansk",
+			"PL",
+			null,
+		);
 		expect(res.status).toHaveBeenCalledWith(200);
 		expect(res.json).toHaveBeenCalledWith({ cities: expectedCities });
 	});
@@ -77,7 +81,32 @@ describe("getCitySearch", () => {
 
 		await getCitySearch(req, res);
 
-		expect(getCitySearchByCityAndCountry).toHaveBeenCalledWith("Gdansk", null);
+		expect(getCitySearchByCityAndCountry).toHaveBeenCalledWith(
+			"Gdansk",
+			null,
+			null,
+		);
+	});
+
+	it("passes user id when the request is authenticated", async () => {
+		req = {
+			query: {
+				city: "Gdansk",
+				country: "PL",
+			},
+			user: { id: 7 },
+		} as unknown as Request;
+		vi.mocked(getCitySearchByCityAndCountry).mockResolvedValueOnce(
+			expectedCities,
+		);
+
+		await getCitySearch(req, res);
+
+		expect(getCitySearchByCityAndCountry).toHaveBeenCalledWith(
+			"Gdansk",
+			"PL",
+			7,
+		);
 	});
 
 	it("rejects invalid query", async () => {

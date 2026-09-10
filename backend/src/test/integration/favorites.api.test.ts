@@ -2,6 +2,10 @@ import { beforeEach, expect, describe, it, afterAll } from "vitest";
 import { prisma } from "../../db/prisma.js";
 import { app } from "../../server.js";
 import request from "supertest";
+import * as argon2 from "argon2";
+import { getAccessToken } from "../auth.js";
+
+const passwordHash = await argon2.hash("test-password-123");
 
 beforeEach(async () => {
 	await prisma.favorite.deleteMany();
@@ -9,8 +13,8 @@ beforeEach(async () => {
 	await prisma.city.deleteMany();
 	await prisma.user.upsert({
 		where: { username: "demo" },
-		update: {},
-		create: { username: "demo" },
+		update: { passwordHash },
+		create: { username: "demo", passwordHash },
 	});
 });
 
@@ -22,13 +26,20 @@ const city = {
 	lon: 18.6466,
 };
 
+const authHeader = async () => ({
+	Authorization: `Bearer ${await getAccessToken("demo")}`,
+});
+
 afterAll(async () => {
 	await prisma.$disconnect();
 });
 
 describe("POST /api/favorites", () => {
 	it("create city and favorite", async () => {
-		const res = await request(app).post("/api/favorites").send(city);
+		const res = await request(app)
+			.post("/api/favorites")
+			.set(await authHeader())
+			.send(city);
 
 		expect(res.status).toBe(201);
 
@@ -42,17 +53,33 @@ describe("POST /api/favorites", () => {
 	});
 
 	it("does not duplicate on second post", async () => {
-		await request(app).post("/api/favorites").send(city);
-		await request(app).post("/api/favorites").send(city);
+		await request(app)
+			.post("/api/favorites")
+			.set(await authHeader())
+			.send(city);
+		await request(app)
+			.post("/api/favorites")
+			.set(await authHeader())
+			.send(city);
 
 		expect(await prisma.city.count()).toBe(1);
 		expect(await prisma.favorite.count()).toBe(1);
 	});
 
 	it("returns 400 for invalid body", async () => {
-		const res = await request(app).post("/api/favorites").send({});
+		const res = await request(app)
+			.post("/api/favorites")
+			.set(await authHeader())
+			.send({});
 		expect(res.status).toBe(400);
 		expect(res.body.error).toEqual(expect.any(Array));
+	});
+
+	it("returns 401 when the token is missing", async () => {
+		const res = await request(app).post("/api/favorites").send(city);
+
+		expect(res.status).toBe(401);
+		expect(res.body).toEqual({ error: "Authentication required" });
 	});
 });
 
@@ -78,7 +105,9 @@ describe("DELETE /api/favorites/:cityId", () => {
 			},
 		});
 
-		const res = await request(app).delete(`/api/favorites/${savedCity.id}`);
+		const res = await request(app)
+			.delete(`/api/favorites/${savedCity.id}`)
+			.set(await authHeader());
 
 		const count = await prisma.favorite.count({
 			where: {
@@ -93,14 +122,18 @@ describe("DELETE /api/favorites/:cityId", () => {
 	});
 
 	it("returns 204 when favorite does not exist", async () => {
-		const res = await request(app).delete("/api/favorites/999");
+		const res = await request(app)
+			.delete("/api/favorites/999")
+			.set(await authHeader());
 
 		expect(res.status).toBe(204);
 		expect(res.body).toStrictEqual({});
 	});
 
 	it("returns 400 error if city id is invalid", async () => {
-		const res = await request(app).delete("/api/favorites/abc");
+		const res = await request(app)
+			.delete("/api/favorites/abc")
+			.set(await authHeader());
 
 		expect(res.status).toBe(400);
 		expect(res.body.error[0].message).toBe("City id must be a number");
@@ -108,7 +141,7 @@ describe("DELETE /api/favorites/:cityId", () => {
 });
 
 describe("GET /api/favorites", () => {
-	it("returns favorite cites for a demo user", async () => {
+	it("returns favorite cities for the authenticated user", async () => {
 		const demoUser = await prisma.user.findUniqueOrThrow({
 			where: { username: "demo" },
 		});
@@ -145,7 +178,9 @@ describe("GET /api/favorites", () => {
 			},
 		});
 
-		const res = await request(app).get("/api/favorites");
+		const res = await request(app)
+			.get("/api/favorites")
+			.set(await authHeader());
 
 		expect(res.status).toBe(200);
 		expect(res.body).toEqual({
@@ -183,13 +218,18 @@ describe("GET /api/favorites", () => {
 	});
 
 	it("returns nothing if no favorites", async () => {
-		await prisma.user.findUniqueOrThrow({
-			where: { username: "demo" },
-		});
-
-		const res = await request(app).get("/api/favorites");
+		const res = await request(app)
+			.get("/api/favorites")
+			.set(await authHeader());
 
 		expect(res.status).toBe(200);
 		expect(res.body).toEqual({ favorites: [] });
+	});
+
+	it("returns 401 when the token is missing", async () => {
+		const res = await request(app).get("/api/favorites");
+
+		expect(res.status).toBe(401);
+		expect(res.body).toEqual({ error: "Authentication required" });
 	});
 });

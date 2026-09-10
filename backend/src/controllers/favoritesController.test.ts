@@ -6,9 +6,9 @@ import {
 	getFavorites,
 } from "./favoritesController.js";
 import {
-	createFavoriteForDemoUser,
-	deleteFavoriteForDemoUser,
-	getFavoriteForDemoUser,
+	createFavoriteForUser,
+	deleteFavoriteForUser,
+	getFavoriteForUser,
 } from "../services/favoritesService.js";
 import { ZodError } from "zod";
 
@@ -28,6 +28,7 @@ const res = {
 
 let req = {
 	body: city,
+	user: { id: 7 },
 } as unknown as Request;
 
 const expectedFavorites = [
@@ -48,15 +49,16 @@ const expectedFavorites = [
 ];
 
 vi.mock("../services/favoritesService.js", () => ({
-	createFavoriteForDemoUser: vi.fn(),
-	deleteFavoriteForDemoUser: vi.fn(),
-	getFavoriteForDemoUser: vi.fn(),
+	createFavoriteForUser: vi.fn(),
+	deleteFavoriteForUser: vi.fn(),
+	getFavoriteForUser: vi.fn(),
 }));
 
 beforeEach(() => {
 	vi.clearAllMocks();
 	req = {
 		body: city,
+		user: { id: 7 },
 	} as unknown as Request;
 });
 
@@ -64,51 +66,51 @@ describe("createFavorite", () => {
 	it("return correct status", async () => {
 		await createFavorite(req, res);
 
-		expect(createFavoriteForDemoUser).toHaveBeenCalledWith(city);
+		expect(createFavoriteForUser).toHaveBeenCalledWith(city, 7);
 		expect(res.status).toHaveBeenCalledWith(201);
 		expect(res.send).toHaveBeenCalledWith();
 	});
 
 	it("rejects invalid body", async () => {
-		req = { body: {} } as unknown as Request;
+		req = { body: {}, user: { id: 7 } } as unknown as Request;
 
 		await expect(createFavorite(req, res)).rejects.toBeInstanceOf(ZodError);
-		expect(createFavoriteForDemoUser).not.toHaveBeenCalled();
+		expect(createFavoriteForUser).not.toHaveBeenCalled();
 	});
 });
 
 describe("deleteFavorite", () => {
 	it("return correct status", async () => {
-		req = { params: { cityId: "15" } } as unknown as Request;
+		req = { params: { cityId: "15" }, user: { id: 7 } } as unknown as Request;
 
 		await deleteFavorite(req, res);
 
-		expect(deleteFavoriteForDemoUser).toHaveBeenCalledWith(15);
+		expect(deleteFavoriteForUser).toHaveBeenCalledWith(15, 7);
 		expect(res.status).toHaveBeenCalledWith(204);
 		expect(res.send).toHaveBeenCalledWith();
 	});
 
 	it("rejects invalid params", async () => {
-		req = { params: {} } as unknown as Request;
+		req = { params: {}, user: { id: 7 } } as unknown as Request;
 
 		await expect(deleteFavorite(req, res)).rejects.toBeInstanceOf(ZodError);
-		expect(deleteFavoriteForDemoUser).not.toHaveBeenCalled();
+		expect(deleteFavoriteForUser).not.toHaveBeenCalled();
 	});
 });
 
 describe("getFavorites", () => {
 	it("returns favorites", async () => {
-		vi.mocked(getFavoriteForDemoUser).mockResolvedValue(expectedFavorites);
+		vi.mocked(getFavoriteForUser).mockResolvedValue(expectedFavorites);
 
 		await getFavorites(req, res);
 
-		expect(getFavoriteForDemoUser).toHaveBeenCalled();
+		expect(getFavoriteForUser).toHaveBeenCalledWith(7);
 		expect(res.status).toHaveBeenCalledWith(200);
 		expect(res.json).toHaveBeenCalledWith({ favorites: expectedFavorites });
 	});
 
 	it("propagates service error", async () => {
-		vi.mocked(getFavoriteForDemoUser).mockRejectedValue(new Error("API down"));
+		vi.mocked(getFavoriteForUser).mockRejectedValue(new Error("API down"));
 		await expect(getFavorites(req, res)).rejects.toThrow("API down");
 	});
 });

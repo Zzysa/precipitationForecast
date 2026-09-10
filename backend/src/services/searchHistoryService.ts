@@ -1,34 +1,24 @@
 import { prisma } from "../db/prisma.js";
 
-const getSearchHistoryForDemoUser = async () => {
-	const demoUser = await prisma.user.findUniqueOrThrow({
-		where: { username: "demo" },
-		select: { id: true },
-	});
-
+const getSearchHistoryForUser = async (userId: number) => {
 	return prisma.searchHistory.findMany({
-		where: { userId: demoUser.id },
+		where: { userId },
 		include: { city: true },
 		orderBy: { searchedAt: "desc" },
 		take: 10,
 	});
 };
 
-const deleteSearchHistoryByCityIdForDemoUser = async (cityId: number) => {
-	const demoUser = await prisma.user.findUniqueOrThrow({
-		where: { username: "demo" },
-		select: { id: true },
-	});
-
+const deleteSearchHistoryByCityIdForUser = async (
+	cityId: number,
+	userId: number,
+) => {
 	await prisma.searchHistory.deleteMany({
 		where: {
-			userId: demoUser.id,
+			userId,
 			cityId,
 		},
 	});
 };
 
-export {
-	getSearchHistoryForDemoUser,
-	deleteSearchHistoryByCityIdForDemoUser,
-};
+export { getSearchHistoryForUser, deleteSearchHistoryByCityIdForUser };

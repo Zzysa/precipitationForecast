@@ -5,11 +5,13 @@ import {
 } from "./searchHistoryController.js";
 import type { Request, Response } from "express";
 import {
-	getSearchHistoryForDemoUser,
-	deleteSearchHistoryByCityIdForDemoUser,
+	getSearchHistoryForUser,
+	deleteSearchHistoryByCityIdForUser,
 } from "../services/searchHistoryService.js";
 
-let req = {} as unknown as Request;
+let req = {
+	user: { id: 7 },
+} as unknown as Request;
 const res = {
 	status: vi.fn().mockReturnThis(),
 	json: vi.fn(),
@@ -35,28 +37,29 @@ const expectedHistory = [
 
 beforeEach(() => {
 	vi.clearAllMocks();
+	req = {
+		user: { id: 7 },
+	} as unknown as Request;
 });
 
 vi.mock("../services/searchHistoryService.js", () => ({
-	getSearchHistoryForDemoUser: vi.fn(),
-	deleteSearchHistoryByCityIdForDemoUser: vi.fn(),
+	getSearchHistoryForUser: vi.fn(),
+	deleteSearchHistoryByCityIdForUser: vi.fn(),
 }));
 
 describe("searchHistoryController", () => {
 	it("returns search history", async () => {
-		vi.mocked(getSearchHistoryForDemoUser).mockResolvedValue(expectedHistory);
+		vi.mocked(getSearchHistoryForUser).mockResolvedValue(expectedHistory);
 
 		await getSearchHistory(req, res);
 
-		expect(getSearchHistoryForDemoUser).toHaveBeenCalledWith();
+		expect(getSearchHistoryForUser).toHaveBeenCalledWith(7);
 		expect(res.status).toHaveBeenCalledWith(200);
 		expect(res.json).toHaveBeenCalledWith({ history: expectedHistory });
 	});
 
 	it("throwing an error", async () => {
-		vi.mocked(getSearchHistoryForDemoUser).mockRejectedValue(
-			new Error("API down"),
-		);
+		vi.mocked(getSearchHistoryForUser).mockRejectedValue(new Error("API down"));
 
 		await expect(getSearchHistory(req, res)).rejects.toThrow("API down");
 	});
@@ -66,13 +69,14 @@ describe("deleteSearchHistory", () => {
 	it("deletes a row by city id", async () => {
 		req = {
 			params: { cityId: "3" },
+			user: { id: 7 },
 		} as unknown as Request;
 
-		vi.mocked(deleteSearchHistoryByCityIdForDemoUser).mockResolvedValue();
+		vi.mocked(deleteSearchHistoryByCityIdForUser).mockResolvedValue();
 
 		await deleteSearchHistory(req, res);
 
-		expect(deleteSearchHistoryByCityIdForDemoUser).toHaveBeenCalledWith(3);
+		expect(deleteSearchHistoryByCityIdForUser).toHaveBeenCalledWith(3, 7);
 		expect(res.status).toHaveBeenCalledWith(204);
 		expect(res.send).toHaveBeenCalledWith();
 	});
@@ -80,9 +84,10 @@ describe("deleteSearchHistory", () => {
 	it("throwing an error", async () => {
 		req = {
 			params: { cityId: "3" },
+			user: { id: 7 },
 		} as unknown as Request;
 
-		vi.mocked(deleteSearchHistoryByCityIdForDemoUser).mockRejectedValue(
+		vi.mocked(deleteSearchHistoryByCityIdForUser).mockRejectedValue(
 			new Error("API down"),
 		);
 
@@ -92,11 +97,12 @@ describe("deleteSearchHistory", () => {
 	it("rejects an invalid city id", async () => {
 		req = {
 			params: { cityId: "abc" },
+			user: { id: 7 },
 		} as unknown as Request;
 
 		await expect(deleteSearchHistory(req, res)).rejects.toThrow(
 			"City id must be a number",
 		);
-		expect(deleteSearchHistoryByCityIdForDemoUser).not.toHaveBeenCalled();
+		expect(deleteSearchHistoryByCityIdForUser).not.toHaveBeenCalled();
 	});
 });

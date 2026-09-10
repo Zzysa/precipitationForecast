@@ -5,7 +5,7 @@ import { getWeatherByCity } from "../services/weatherService.js";
 const getWeather = async (req: Request, res: Response) => {
 	const { city } = CityParamsSchema.parse(req.params);
 
-	const data = await getWeatherByCity(city);
+	const data = await getWeatherByCity(city, req.user?.id ?? null);
 
 	res.status(200).json({ city: data });
 };

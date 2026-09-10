@@ -4,15 +4,15 @@ import {
 	CreateFavoriteBodySchema,
 } from "../schemas/weatherSchemas.js";
 import {
-	createFavoriteForDemoUser,
-	deleteFavoriteForDemoUser,
-	getFavoriteForDemoUser,
+	createFavoriteForUser,
+	deleteFavoriteForUser,
+	getFavoriteForUser,
 } from "../services/favoritesService.js";
 
 const createFavorite = async (req: Request, res: Response) => {
 	const city = CreateFavoriteBodySchema.parse(req.body);
 
-	await createFavoriteForDemoUser(city);
+	await createFavoriteForUser(city, req.user!.id);
 
 	res.status(201).send();
 };
@@ -20,13 +20,13 @@ const createFavorite = async (req: Request, res: Response) => {
 const deleteFavorite = async (req: Request, res: Response) => {
 	const { cityId } = CityIdParamsSchema.parse(req.params);
 
-	await deleteFavoriteForDemoUser(cityId);
+	await deleteFavoriteForUser(cityId, req.user!.id);
 
 	res.status(204).send();
 };
 
 const getFavorites = async (req: Request, res: Response) => {
-	const data = await getFavoriteForDemoUser();
+	const data = await getFavoriteForUser(req.user!.id);
 
 	res.status(200).json({ favorites: data });
 };

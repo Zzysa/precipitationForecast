@@ -46,7 +46,10 @@ const fetchForecast = async (city: string) => {
 	return response;
 };
 
-const getWeatherByCity = async (city: string): Promise<WeatherResponseDTO> => {
+const getWeatherByCity = async (
+	city: string,
+	userId: number | null,
+): Promise<WeatherResponseDTO> => {
 	const safeCity = encodeURIComponent(city);
 
 	const [currentSettled, forecastSettled] = await Promise.allSettled([
@@ -62,33 +65,30 @@ const getWeatherByCity = async (city: string): Promise<WeatherResponseDTO> => {
 	const { lat, lon } = forecast.city.coord;
 	const { country, name } = forecast.city;
 
-	const demoUser = await prisma.user.findUniqueOrThrow({
-		where: { username: "demo" },
-		select: { id: true },
-	});
+	if (userId !== null) {
+		const savedCity = await prisma.city.upsert({
+			where: { lat_lon: { lat, lon } },
+			update: { name, country },
+			create: { name: name, lat, lon, state: null, country },
+			select: { id: true },
+		});
 
-	const savedCity = await prisma.city.upsert({
-		where: { lat_lon: { lat, lon } },
-		update: { name, country},
-		create: { name: name, lat, lon, state: null, country },
-		select: { id: true },
-	});
-
-	await prisma.searchHistory.upsert({
-		where: {
-			userId_cityId: {
-				userId: demoUser.id,
+		await prisma.searchHistory.upsert({
+			where: {
+				userId_cityId: {
+					userId,
+					cityId: savedCity.id,
+				},
+			},
+			update: {
+				searchedAt: new Date(),
+			},
+			create: {
+				userId,
 				cityId: savedCity.id,
 			},
-		},
-		update: {
-			searchedAt: new Date(),
-		},
-		create: {
-			userId: demoUser.id,
-			cityId: savedCity.id,
-		},
-	});
+		});
+	}
 
 	const current =
 		currentSettled.status === "fulfilled"

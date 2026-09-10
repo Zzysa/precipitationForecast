@@ -165,9 +165,6 @@ const mockResponse = (data: unknown, ok = true) => ({
 
 vi.mock("../db/prisma.js", () => ({
 	prisma: {
-		user: {
-			findUniqueOrThrow: vi.fn(),
-		},
 		favorite: {
 			findMany: vi.fn(),
 		},
@@ -183,10 +180,6 @@ beforeEach(() => {
 	vi.clearAllMocks();
 	fetchMock.mockReset();
 	vi.stubEnv("WEATHER_API_KEY", "test-key");
-	vi.mocked(prisma.user.findUniqueOrThrow).mockResolvedValue({
-		id: 7,
-		username: "demo",
-	});
 	vi.mocked(prisma.favorite.findMany).mockResolvedValue([]);
 	vi.mocked(prisma.searchHistory.findMany).mockResolvedValue([]);
 });
@@ -200,7 +193,7 @@ describe("getCitySearchByCityAndCountry", () => {
 	it("returns mapped geocoding results", async () => {
 		fetchMock.mockResolvedValueOnce(mockResponse(geocodingResponse));
 
-		const result = await getCitySearchByCityAndCountry("Gdansk", "PL");
+		const result = await getCitySearchByCityAndCountry("Gdansk", "PL", 7);
 
 		expect(fetchMock).toHaveBeenCalledWith(
 			"https://api.openweathermap.org/geo/1.0/direct?q=Gdansk%2CPL&limit=5&appid=test-key",
@@ -239,7 +232,7 @@ describe("getCitySearchByCityAndCountry", () => {
 	it("searches without country", async () => {
 		fetchMock.mockResolvedValueOnce(mockResponse(geocodingResponse));
 
-		await getCitySearchByCityAndCountry("New York", null);
+		await getCitySearchByCityAndCountry("New York", null, 7);
 
 		expect(fetchMock).toHaveBeenCalledWith(
 			"https://api.openweathermap.org/geo/1.0/direct?q=New%20York&limit=5&appid=test-key",
@@ -258,12 +251,22 @@ describe("getCitySearchByCityAndCountry", () => {
 		);
 	});
 
+	it("skips favorites and search history for a guest", async () => {
+		fetchMock.mockResolvedValueOnce(mockResponse(geocodingResponse));
+
+		const result = await getCitySearchByCityAndCountry("Gdansk", "PL", null);
+
+		expect(prisma.favorite.findMany).not.toHaveBeenCalled();
+		expect(prisma.searchHistory.findMany).not.toHaveBeenCalled();
+		expect(result).toEqual(expectedCities);
+	});
+
 	it("throws when geocoding request fails", async () => {
 		fetchMock.mockResolvedValueOnce(mockResponse(null, false));
 
-		await expect(getCitySearchByCityAndCountry("Gdansk", "PL")).rejects.toThrow(
-			"API error",
-		);
+		await expect(
+			getCitySearchByCityAndCountry("Gdansk", "PL", null),
+		).rejects.toThrow("API error");
 	});
 
 	it("merges duplicate cities and combines their flags", async () => {
@@ -273,7 +276,7 @@ describe("getCitySearchByCityAndCountry", () => {
 		);
 		fetchMock.mockResolvedValueOnce(mockResponse(geocodingResponse));
 
-		const result = await getCitySearchByCityAndCountry("Gdansk", "PL");
+		const result = await getCitySearchByCityAndCountry("Gdansk", "PL", 7);
 
 		expect(result).toEqual(expectedMergedCities);
 	});
@@ -307,7 +310,7 @@ describe("getCitySearchByCityAndCountry", () => {
 		]);
 		fetchMock.mockResolvedValueOnce(mockResponse(springfieldGeocodingResponse));
 
-		const result = await getCitySearchByCityAndCountry("Springfield", "US");
+		const result = await getCitySearchByCityAndCountry("Springfield", "US", 7);
 
 		expect(result).toHaveLength(2);
 		expect(result.map(({ state }) => state)).toEqual([
@@ -339,7 +342,7 @@ describe("getCitySearchByCityAndCountry", () => {
 		);
 		fetchMock.mockResolvedValueOnce(mockResponse([]));
 
-		const result = await getCitySearchByCityAndCountry("City", "PL");
+		const result = await getCitySearchByCityAndCountry("City", "PL", 7);
 
 		expect(result).toHaveLength(10);
 		expect(result[0]?.name).toBe("City 1");
