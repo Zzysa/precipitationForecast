@@ -40,12 +40,13 @@ describe("POST /api/auth/register", () => {
 		);
 	});
 
-	it("returns 500 when username is already taken", async () => {
+	it("returns 409 when username is already taken", async () => {
 		await request(app).post("/api/auth/register").send(body);
 
 		const res = await request(app).post("/api/auth/register").send(body);
 
-		expect(res.status).toBe(500);
+		expect(res.status).toBe(409);
+		expect(res.body.error).toBe("Username is already taken");
 		expect(await prisma.user.count()).toBe(1);
 	});
 
@@ -73,7 +74,7 @@ describe("POST /api/auth/login", () => {
 			.post("/api/auth/login")
 			.send({ ...body, password: "wrong-password" });
 
-		expect(res.status).toBe(500);
+		expect(res.status).toBe(401);
 		expect(res.body.error).toEqual("Invalid credentials");
 	});
 
