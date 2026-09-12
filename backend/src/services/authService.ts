@@ -4,6 +4,8 @@ import type {
 	LoginBodyType,
 	RegisterBodyType,
 } from "../schemas/authSchemas.js";
+import { Prisma } from "@prisma/client";
+import { HttpError } from "../errors/HttpError.js";
 import * as argon2 from "argon2";
 
 const registerUser = async (input: RegisterBodyType) => {
@@ -11,7 +13,17 @@ const registerUser = async (input: RegisterBodyType) => {
 
 	const passwordHash = await argon2.hash(password);
 
-	await prisma.user.create({ data: { username, passwordHash } });
+	try {
+		await prisma.user.create({ data: { username, passwordHash } });
+	} catch (err) {
+		if (
+			err instanceof Prisma.PrismaClientKnownRequestError &&
+			err.code === "P2002"
+		) {
+			throw new HttpError(409, "Username is already taken");
+		}
+		throw err;
+	}
 };
 
 const loginUser = async (input: LoginBodyType) => {
@@ -23,7 +35,7 @@ const loginUser = async (input: LoginBodyType) => {
 		user !== null && (await argon2.verify(user.passwordHash, input.password));
 
 	if (!isPasswordValid) {
-		throw new Error("Invalid credentials");
+		throw new HttpError(401, "Invalid credentials");
 	}
 
 	return createToken(user.id);
@@ -37,3 +49,4 @@ const getMeById = async (userId: number) => {
 };
 
 export { registerUser, loginUser, getMeById };
+
