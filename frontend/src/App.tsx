@@ -2,6 +2,9 @@ import { BrowserRouter, Link, Route, Routes, useLocation } from "react-router-do
 import { AuthProvider, useAuth } from "./context/AuthContext";
 import AppLayout from "./layouts/AppLayout";
 import { AuthPage } from "./pages/AuthPage";
+import { HomePage } from "./pages/HomePage";
+import { CityPage } from "./pages/CityPage";
+import { CitySearch } from "./components/CitySearch";
 
 function UserNav() {
   const { user, logout, isLoading } = useAuth();
@@ -43,8 +46,16 @@ function App() {
     <BrowserRouter>
       <AuthProvider>
         <Routes>
-          <Route element={<AppLayout rightSlot={<UserNav />} />}>
-            <Route path="/" element={null} />
+          <Route
+            element={
+              <AppLayout
+                centerSlot={<CitySearch />}
+                rightSlot={<UserNav />}
+              />
+            }
+          >
+            <Route path="/" element={<HomePage />} />
+            <Route path="/city/:name" element={<CityPage />} />
             <Route path="/login" element={<AuthPage />} />
           </Route>
         </Routes>
@@ -54,3 +65,5 @@ function App() {
 }
 
 export default App;
+
+
