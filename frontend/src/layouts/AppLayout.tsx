@@ -1,5 +1,6 @@
-import type { ReactNode } from "react";
-import { Link, Outlet } from "react-router-dom";
+import { useRef, type ReactNode } from "react";
+import { Link, Outlet, useLocation } from "react-router-dom";
+import { useSwipeBack } from "../hooks/useSwipeBack";
 
 interface AppLayoutProps {
   centerSlot?: ReactNode;
@@ -8,6 +9,12 @@ interface AppLayoutProps {
 }
 
 function AppLayout({ centerSlot, rightSlot, children }: AppLayoutProps) {
+  const mainRef = useRef<HTMLElement>(null);
+  const location = useLocation();
+  const isLoginPage = location.pathname === "/login";
+
+  useSwipeBack(mainRef);
+
   return (
     <div className="relative h-screen flex flex-col overflow-hidden">
       <div className="fixed inset-0 z-0 bg-gradient-to-b from-bg-primary to-bg-secondary">
@@ -34,14 +41,16 @@ function AppLayout({ centerSlot, rightSlot, children }: AppLayoutProps) {
           </svg>
         </Link>
 
-        <div className="flex-1">{centerSlot}</div>
+        <div className="flex-1">
+          {!isLoginPage && centerSlot}
+        </div>
 
         <div className="flex items-center justify-end min-w-[140px] h-8">
           {rightSlot}
         </div>
       </header>
 
-      <main className="relative z-1 flex-1 flex flex-col overflow-auto">
+      <main ref={mainRef} className="relative z-1 flex-1 flex flex-col overflow-auto">
         {children ?? <Outlet />}
       </main>
 
@@ -57,3 +66,5 @@ function AppLayout({ centerSlot, rightSlot, children }: AppLayoutProps) {
 }
 
 export default AppLayout;
+
+
