@@ -5,13 +5,36 @@ const createFavoriteForUser = async (
 	city: CreateFavoriteInputType,
 	userId: number,
 ) => {
+	let lat = city.lat;
+	let lon = city.lon;
+
+	if (lat === 0 && lon === 0) {
+		try {
+			const q = city.country ? `${city.name},${city.country}` : city.name;
+			const geoRes = await fetch(
+				`https://api.openweathermap.org/geo/1.0/direct?q=${encodeURIComponent(q)}&limit=1&appid=${process.env.WEATHER_API_KEY}`,
+			);
+			if (geoRes.ok) {
+				const geoData = (await geoRes.json()) as Array<{
+					lat: number;
+					lon: number;
+				}>;
+				if (geoData.length > 0 && geoData[0]) {
+					lat = geoData[0].lat;
+					lon = geoData[0].lon;
+				}
+			}
+		} catch {
+		}
+	}
+
 	const savedCity = await prisma.city.upsert({
-		where: { lat_lon: { lat: city.lat, lon: city.lon } },
+		where: { lat_lon: { lat, lon } },
 		update: {},
 		create: {
 			name: city.name,
-			lat: city.lat,
-			lon: city.lon,
+			lat,
+			lon,
 			state: city.state,
 			country: city.country,
 		},
