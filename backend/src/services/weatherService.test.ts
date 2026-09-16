@@ -1,4 +1,4 @@
-import { vi, describe, expect, it, beforeEach } from "vitest";
+import { vi, describe, expect, it, beforeEach, afterEach } from "vitest";
 import { forecast, currentWeather, airPollution } from "../test/fixtures.js";
 import { getWeatherByCity } from "./weatherService.js";
 import { mapToWeatherDTO } from "../mappers/weather.mapper.js";
@@ -22,6 +22,7 @@ const city = "Gdansk";
 const userId = 1;
 
 beforeEach(() => {
+	process.env.FORECAST_MODE = "hourly";
 	fetchMock.mockReset();
 	vi.mocked(prisma.city.upsert).mockReset();
 	vi.mocked(prisma.searchHistory.upsert).mockReset();
@@ -42,6 +43,10 @@ beforeEach(() => {
 	});
 });
 
+afterEach(() => {
+	delete process.env.FORECAST_MODE;
+});
+
 describe("weatherService", () => {
 	it("happy path", async () => {
 		mockFetchAll(forecast, currentWeather, airPollution);
@@ -56,10 +61,26 @@ describe("weatherService", () => {
 			expect.stringContaining(`weather?q=${city}`),
 		);
 		expect(fetch).toHaveBeenCalledWith(
-			expect.stringContaining(`forecast?q=${city}`),
+			expect.stringContaining(`forecast/hourly?q=${city}`),
 		);
 		expect(fetch).toHaveBeenCalledWith(
 			expect.stringContaining("air_pollution/forecast?lat=52.52"),
+		);
+	});
+
+	it("uses free 3h forecast when FORECAST_MODE=3h", async () => {
+		process.env.FORECAST_MODE = "3h";
+		mockFetchAll(forecast, currentWeather, airPollution);
+
+		await getWeatherByCity(city, null);
+
+		expect(fetch).toHaveBeenCalledWith(
+			expect.stringContaining(
+				`api.openweathermap.org/data/2.5/forecast?q=${city}`,
+			),
+		);
+		expect(fetch).not.toHaveBeenCalledWith(
+			expect.stringContaining("forecast/hourly"),
 		);
 	});
 

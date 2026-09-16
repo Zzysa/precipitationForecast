@@ -18,13 +18,17 @@ const stubFetch = () => {
 	vi.stubGlobal("fetch", fetchMock);
 };
 
+const isForecastUrl = (url: string) =>
+	url.includes("/forecast/hourly?") ||
+	(url.includes("/forecast?") && !url.includes("air_pollution"));
+
 const mockFetchAll = (
 	forecast: null | OWForecastResponse = null,
 	currentWeather: null | OWCurrentWeatherResponse = null,
 	airPollution: null | OWAirPollutionResponse = null,
 ) => {
 	fetchMock.mockImplementation((url: string) => {
-		if (url.includes("forecast?q"))
+		if (isForecastUrl(url))
 			return Promise.resolve(mockResponse(forecast, forecast ? true : false));
 		if (url.includes("/weather?q"))
 			return Promise.resolve(

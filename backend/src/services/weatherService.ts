@@ -7,6 +7,11 @@ import type {
 } from "../dtos/openWeather.dto.js";
 import { prisma } from "../db/prisma.js";
 
+type ForecastMode = "hourly" | "3h";
+
+const getForecastMode = (): ForecastMode =>
+	process.env.FORECAST_MODE === "3h" ? "3h" : "hourly";
+
 const fetchCurrentWeather = async (city: string) => {
 	const response = await fetch(
 		`https://api.openweathermap.org/data/2.5/weather?q=${city}&appid=${process.env.WEATHER_API_KEY}&units=metric`,
@@ -33,7 +38,7 @@ const fetchAirPollution = async (lat: number, lon: number) => {
 	return response;
 };
 
-const fetchForecast = async (city: string) => {
+const fetchThreeHourForecast = async (city: string) => {
 	const response = await fetch(
 		`https://api.openweathermap.org/data/2.5/forecast?q=${city}&appid=${process.env.WEATHER_API_KEY}&units=metric`,
 	);
@@ -44,6 +49,27 @@ const fetchForecast = async (city: string) => {
 	}
 
 	return response;
+};
+
+const fetchHourlyForecast = async (city: string) => {
+	const response = await fetch(
+		`https://pro.openweathermap.org/data/2.5/forecast/hourly?q=${city}&cnt=24&appid=${process.env.WEATHER_API_KEY}&units=metric`,
+	);
+
+	if (!response.ok) {
+		const errorBody = await response.text();
+		throw new Error(errorBody);
+	}
+
+	return response;
+};
+
+const fetchForecast = async (city: string) => {
+	if (getForecastMode() === "3h") {
+		return fetchThreeHourForecast(city);
+	}
+
+	return fetchHourlyForecast(city);
 };
 
 const getWeatherByCity = async (
