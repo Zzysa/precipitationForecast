@@ -8,7 +8,7 @@ import {
   removeFavorite,
   getFavorites,
   deleteSearchHistoryEntry,
-  getWeather,
+  cityPath,
   type CityResult,
 } from "../api/weather";
 
@@ -264,10 +264,8 @@ export function CitySearch() {
   const handleSelect = useCallback((city: CityResult) => {
     setQuery("");
     setIsOpen(false);
-    getWeather(city.name)
-      .then(() => notifyHomeListsChanged())
-      .catch(() => {});
-  }, []);
+    navigate(cityPath(city));
+  }, [navigate]);
 
   const handleClear = () => {
     setQuery("");

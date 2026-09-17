@@ -1,9 +1,10 @@
-import { BrowserRouter, Link, Navigate, Route, Routes, useLocation } from "react-router-dom";
+import { BrowserRouter, Link, Route, Routes, useLocation } from "react-router-dom";
 import { AuthProvider, useAuth } from "./context/AuthContext";
 import AppLayout from "./layouts/AppLayout";
 import { AuthPage } from "./pages/AuthPage";
 import { HomePage } from "./pages/HomePage";
 import { CitySearch } from "./components/CitySearch";
+import { CityPage } from "./pages/CityPage";
 
 function UserNav() {
   const { user, logout, isLoading } = useAuth();
@@ -54,7 +55,7 @@ function App() {
             }
           >
             <Route path="/" element={<HomePage />} />
-            <Route path="/city/:name" element={<Navigate to="/" replace />} />
+            <Route path="/city/:name" element={<CityPage />} />
             <Route path="/login" element={<AuthPage />} />
           </Route>
         </Routes>
@@ -64,5 +65,4 @@ function App() {
 }
 
 export default App;
-
 

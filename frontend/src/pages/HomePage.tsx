@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { Link } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { CountryFlag } from "../components/CountryFlag";
 import {
@@ -7,6 +8,7 @@ import {
   removeFavorite,
   getSearchHistory,
   deleteSearchHistoryEntry,
+  cityPath,
   type FavoriteCity,
   type SearchHistoryEntry,
 } from "../api/weather";
@@ -74,13 +76,14 @@ function FavoriteCard({ favorite, onDelete }: FavoriteCardProps) {
 
   return (
     <div className="group relative flex w-full flex-col items-center gap-1.5 pt-4 pb-4 pl-5 pr-5 rounded-2xl bg-bg-card border border-border-light hover:bg-bg-card-hover hover:border-accent-blue/50 transition-all">
+      <Link to={cityPath(city)} aria-label={`Weather in ${city.name}`} className="absolute inset-0 rounded-2xl focus-visible:outline-2 focus-visible:outline-accent-blue" />
       <button
         type="button"
         onClick={(e) => {
           e.stopPropagation();
           onDelete();
         }}
-        className="absolute top-1.5 right-1.5 inline-flex items-center justify-center w-7 h-7 rounded-lg text-text-muted hover:text-accent-red hover:bg-white/[0.06] opacity-0 group-hover:opacity-100 transition-all cursor-pointer"
+        className="absolute top-1.5 right-1.5 inline-flex items-center justify-center w-7 h-7 rounded-lg text-text-muted hover:text-accent-red hover:bg-white/[0.06] opacity-0 group-hover:opacity-100 focus:opacity-100 transition-all cursor-pointer"
         aria-label="Remove favourite"
       >
         <RemoveIcon />
@@ -115,6 +118,7 @@ function HistoryRow({
 
   return (
     <div className="group relative flex items-center gap-3 px-4 py-2.5 rounded-xl bg-bg-card border border-border-light hover:bg-bg-card-hover hover:border-accent-blue/50 transition-all">
+      <Link to={cityPath(city)} aria-label={`Weather in ${city.name}`} className="absolute inset-0 rounded-xl focus-visible:outline-2 focus-visible:outline-accent-blue" />
       <CountryFlag countryCode={city.country} size="sm" />
       <span className="text-sm text-text-primary truncate group-hover:text-accent-blue transition-colors">
         {city.name}
