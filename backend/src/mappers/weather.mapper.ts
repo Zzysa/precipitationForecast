@@ -132,6 +132,8 @@ const mapToCurrentWeather = (
 	}
 
 	return {
+		temp: weather.main.temp ?? null,
+		humidity: weather.main.humidity ?? null,
 		tempDay: calculateAvgTempByPeriod(weather, forecast, "day"),
 		tempNight: calculateAvgTempByPeriod(weather, forecast, "night"),
 		condition:

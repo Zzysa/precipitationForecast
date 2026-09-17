@@ -1,5 +1,14 @@
 import z from "zod";
 
+const WeatherQuerySchema = z
+	.object({
+		lat: z.coerce.number().min(-90).max(90).optional(),
+		lon: z.coerce.number().min(-180).max(180).optional(),
+	})
+	.refine((value) => (value.lat === undefined) === (value.lon === undefined), {
+		message: "Latitude and longitude must be provided together",
+	});
+
 const CityParamsSchema = z.object({
 	city: z
 		.string({ error: "Only one city name must be provided" })
@@ -24,5 +33,10 @@ const CreateFavoriteBodySchema = z.object({
 
 type CreateFavoriteInputType = z.infer<typeof CreateFavoriteBodySchema>;
 
-export { CityParamsSchema, CityIdParamsSchema, CreateFavoriteBodySchema };
+export {
+	CityParamsSchema,
+	CityIdParamsSchema,
+	CreateFavoriteBodySchema,
+	WeatherQuerySchema,
+};
 export type { CreateFavoriteInputType };

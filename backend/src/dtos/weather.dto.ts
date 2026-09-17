@@ -10,12 +10,15 @@ interface HourlyAirPollutionPoint {
 }
 
 interface CurrentWeather {
+	temp: number | null;
+	humidity: number | null;
 	tempDay: number | null;
 	tempNight: number | null;
 	condition: string[] | null;
 }
 
 interface WeatherResponseDTO {
+	fetchedAt?: number;
 	hourlyForecast: HourlyForecastPoint[];
 	maxPrecipitationChance: number | null;
 	avgPrecipitationChance: number | null;

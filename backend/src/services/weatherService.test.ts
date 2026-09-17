@@ -1,6 +1,6 @@
 import { vi, describe, expect, it, beforeEach, afterEach } from "vitest";
 import { forecast, currentWeather, airPollution } from "../test/fixtures.js";
-import { getWeatherByCity } from "./weatherService.js";
+import { getWeatherByCity, clearWeatherCache } from "./weatherService.js";
 import { mapToWeatherDTO } from "../mappers/weather.mapper.js";
 import { mockFetchAll, stubFetch, fetchMock } from "../test/mockFetch.js";
 import { prisma } from "../db/prisma.js";
@@ -22,6 +22,7 @@ const city = "Gdansk";
 const userId = 1;
 
 beforeEach(() => {
+	clearWeatherCache();
 	process.env.FORECAST_MODE = "hourly";
 	fetchMock.mockReset();
 	vi.mocked(prisma.city.upsert).mockReset();
@@ -53,18 +54,22 @@ describe("weatherService", () => {
 
 		const result = await getWeatherByCity(city, null);
 
-		expect(result).toStrictEqual(
-			mapToWeatherDTO(forecast, currentWeather, airPollution),
-		);
+		expect(result).toStrictEqual({
+			...mapToWeatherDTO(forecast, currentWeather, airPollution),
+			fetchedAt: expect.any(Number),
+		});
 
 		expect(fetch).toHaveBeenCalledWith(
 			expect.stringContaining(`weather?q=${city}`),
+			expect.objectContaining({ signal: expect.any(AbortSignal) }),
 		);
 		expect(fetch).toHaveBeenCalledWith(
 			expect.stringContaining(`forecast/hourly?q=${city}`),
+			expect.objectContaining({ signal: expect.any(AbortSignal) }),
 		);
 		expect(fetch).toHaveBeenCalledWith(
 			expect.stringContaining("air_pollution/forecast?lat=52.52"),
+			expect.objectContaining({ signal: expect.any(AbortSignal) }),
 		);
 	});
 
@@ -78,9 +83,11 @@ describe("weatherService", () => {
 			expect.stringContaining(
 				`api.openweathermap.org/data/2.5/forecast?q=${city}`,
 			),
+			expect.objectContaining({ signal: expect.any(AbortSignal) }),
 		);
 		expect(fetch).not.toHaveBeenCalledWith(
 			expect.stringContaining("forecast/hourly"),
+			expect.objectContaining({ signal: expect.any(AbortSignal) }),
 		);
 	});
 
@@ -95,7 +102,10 @@ describe("weatherService", () => {
 
 		const result = await getWeatherByCity(city, null);
 
-		expect(result).toStrictEqual(mapToWeatherDTO(forecast, null, airPollution));
+		expect(result).toStrictEqual({
+			...mapToWeatherDTO(forecast, null, airPollution),
+			fetchedAt: expect.any(Number),
+		});
 	});
 
 	it("air pollution is failed", async () => {
@@ -103,9 +113,10 @@ describe("weatherService", () => {
 
 		const result = await getWeatherByCity(city, null);
 
-		expect(result).toStrictEqual(
-			mapToWeatherDTO(forecast, currentWeather, null),
-		);
+		expect(result).toStrictEqual({
+			...mapToWeatherDTO(forecast, currentWeather, null),
+			fetchedAt: expect.any(Number),
+		});
 	});
 
 	it("air pollution and current weather is failed", async () => {
@@ -113,7 +124,10 @@ describe("weatherService", () => {
 
 		const result = await getWeatherByCity(city, null);
 
-		expect(result).toStrictEqual(mapToWeatherDTO(forecast, null, null));
+		expect(result).toStrictEqual({
+			...mapToWeatherDTO(forecast, null, null),
+			fetchedAt: expect.any(Number),
+		});
 	});
 
 	it("adds to search history when forecast is fetched for a user", async () => {

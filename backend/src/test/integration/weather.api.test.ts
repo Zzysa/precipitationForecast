@@ -11,8 +11,10 @@ import { getAccessToken } from "../auth.js";
 const passwordHash = await argon2.hash("test-password-123");
 
 stubFetch();
+import { clearWeatherCache } from "../../services/weatherService.js";
 
 beforeEach(async () => {
+	clearWeatherCache();
 	fetchMock.mockReset();
 	await prisma.favorite.deleteMany();
 	await prisma.searchHistory.deleteMany();
@@ -40,7 +42,10 @@ describe("/api/weather/:city", () => {
 
 		expect(res.status).toBe(200);
 		expect(res.body).toEqual({
-			city: mapToWeatherDTO(forecast, currentWeather, airPollution),
+			city: {
+				...mapToWeatherDTO(forecast, currentWeather, airPollution),
+				fetchedAt: expect.any(Number),
+			},
 		});
 	});
 

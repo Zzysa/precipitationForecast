@@ -1,6 +1,7 @@
 interface OWCurrentWeatherResponse {
 	main: {
 		temp: number;
+		humidity?: number;
 	};
 	weather: {
 		main: string;

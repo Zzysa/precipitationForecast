@@ -13,7 +13,7 @@ const fakeWeather: WeatherResponseDTO = {
 	hourlyAirPollution: null,
 };
 
-const req = { params: { city: "Gdansk" } } as unknown as Request;
+const req = { query: {}, params: { city: "Gdansk" } } as unknown as Request;
 const res = {
 	status: vi.fn().mockReturnThis(),
 	json: vi.fn(),
@@ -38,6 +38,7 @@ describe("getWeather", () => {
 
 	it("passes user id when the request is authenticated", async () => {
 		const authenticatedReq = {
+			query: {},
 			params: { city: "Gdansk" },
 			user: { id: 7 },
 		} as unknown as Request;
