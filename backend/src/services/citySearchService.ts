@@ -3,7 +3,7 @@ import type { CitySearchResultDTO } from "../dtos/citySearch.dto.js";
 import type { OWGeocodingResponse } from "../dtos/openWeather.dto.js";
 import { mapCitiesToSearchResults } from "../mappers/citySearch.mapper.js";
 
-const CITY_COORDINATE_TOLERANCE = 0.1;
+const CITY_COORDINATE_TOLERANCE = 0.5;
 const SEARCH_RESULTS_LIMIT = 10;
 
 const normalizeText = (value: string) =>
@@ -34,18 +34,24 @@ const isSameCity = (
 		return false;
 	}
 
+	const bothHaveState = first.state !== null && second.state !== null;
 	const hasSameState =
-		first.state === null ||
-		second.state === null ||
-		normalizeText(first.state) === normalizeText(second.state);
+		bothHaveState &&
+		normalizeText(first.state!) === normalizeText(second.state!);
 
-	if (!hasSameState) {
+	if (hasSameState) {
+		return true;
+	}
+
+	if (bothHaveState && !hasSameState) {
 		return false;
 	}
 
 	const hasCloseCoordinates =
-		Math.abs(first.lat - second.lat) < CITY_COORDINATE_TOLERANCE &&
-		Math.abs(first.lon - second.lon) < CITY_COORDINATE_TOLERANCE;
+		(first.lat === 0 && first.lon === 0) ||
+		(second.lat === 0 && second.lon === 0) ||
+		(Math.abs(first.lat - second.lat) < CITY_COORDINATE_TOLERANCE &&
+			Math.abs(first.lon - second.lon) < CITY_COORDINATE_TOLERANCE);
 
 	return hasCloseCoordinates;
 };
@@ -67,7 +73,14 @@ const mergeCities = (cities: CitySearchResultDTO[]) => {
 			existing === existingCity
 				? {
 						...existing,
+						name:
+							/[^\x00-\x7F]/.test(city.name) &&
+							!/[^\x00-\x7F]/.test(existing.name)
+								? city.name
+								: existing.name,
 						cityId: existing.cityId ?? city.cityId,
+						lat: existing.lat !== 0 ? existing.lat : city.lat,
+						lon: existing.lon !== 0 ? existing.lon : city.lon,
 						state: existing.state ?? city.state,
 						isFavorite: existing.isFavorite || city.isFavorite,
 						isInSearchHistory:
