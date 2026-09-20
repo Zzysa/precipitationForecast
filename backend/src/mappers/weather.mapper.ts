@@ -21,6 +21,12 @@ const mapToForecast = (forecast: OWForecastResponse): HourlyForecastPoint[] =>
 		timestamp: point.dt,
 		temp: round2(point.main.temp),
 		precipitationProbability: round2(point.pop * 100),
+		...(point.weather?.[0]
+			? {
+					condition: point.weather[0].description ?? point.weather[0].main,
+					weatherIcon: point.weather[0].icon,
+				}
+			: {}),
 	}));
 
 const calculateMaxPrecipChance = (forecast: OWForecastResponse) => {
@@ -148,6 +154,10 @@ const mapToWeatherDTO = (
 	weather: OWCurrentWeatherResponse | null,
 	airPollutionHourly: OWAirPollutionResponse | null,
 ): WeatherResponseDTO => ({
+	...(typeof forecast.city.timezone === "number" &&
+	Number.isFinite(forecast.city.timezone)
+		? { timezoneOffset: forecast.city.timezone }
+		: {}),
 	hourlyForecast: mapToForecast(forecast),
 	maxPrecipitationChance: calculateMaxPrecipChance(forecast),
 	avgPrecipitationChance: calculateAvgPrecipChance(forecast),

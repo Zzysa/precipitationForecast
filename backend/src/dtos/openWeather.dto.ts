@@ -14,6 +14,7 @@ interface OWCurrentWeatherResponse {
 
 interface OWForecastHourly {
 	dt: number;
+	weather?: { main: string; description?: string; icon?: string }[];
 	main: {
 		temp: number;
 	};
@@ -25,6 +26,7 @@ interface OWForecastResponse {
 	city: {
 		name: string;
 		country: string;
+		timezone?: number;
 		coord: {
 			lat: number;
 			lon: number;

@@ -2,6 +2,8 @@ interface HourlyForecastPoint {
 	timestamp: number;
 	temp: number;
 	precipitationProbability: number;
+	condition?: string;
+	weatherIcon?: string;
 }
 
 interface HourlyAirPollutionPoint {
@@ -19,6 +21,7 @@ interface CurrentWeather {
 
 interface WeatherResponseDTO {
 	fetchedAt?: number;
+	timezoneOffset?: number;
 	hourlyForecast: HourlyForecastPoint[];
 	maxPrecipitationChance: number | null;
 	avgPrecipitationChance: number | null;

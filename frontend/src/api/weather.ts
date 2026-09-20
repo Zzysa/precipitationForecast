@@ -15,6 +15,8 @@ export interface HourlyForecastPoint {
   timestamp: number;
   temp: number;
   precipitationProbability: number;
+  condition?: string;
+  weatherIcon?: string;
 }
 
 export interface HourlyAirPollutionPoint {
@@ -32,6 +34,7 @@ export interface CurrentWeather {
 
 export interface WeatherData {
   fetchedAt: number;
+  timezoneOffset?: number;
   hourlyForecast: HourlyForecastPoint[];
   maxPrecipitationChance: number | null;
   avgPrecipitationChance: number | null;
