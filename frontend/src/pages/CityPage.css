@@ -283,10 +283,11 @@
   font-weight: 400;
   margin-left: 3px;
 }
-.weather-metric-time {
-  font-size: 11px;
+.weather-metric-note {
+  display: block;
+  font-size: 10px;
   color: #aec6d3;
-  margin-left: 10px;
+  margin-top: 6px;
 }
 .weather-status {
   display: flex;
@@ -402,10 +403,6 @@
   }
   .weather-metric strong {
     font-size: 24px;
-  }
-  .weather-metric-time {
-    display: block;
-    margin: 5px 0 0;
   }
   .weather-hero-main {
     padding: 26px 0;

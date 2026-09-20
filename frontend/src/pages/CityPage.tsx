@@ -8,6 +8,7 @@ import {
 import { useAuth } from "../context/AuthContext";
 import { useCityWeather } from "../hooks/useCityWeather";
 import { HourlyForecastChart } from "../components/HourlyForecastChart";
+import { dailyPrecipitation } from "../components/dailyPrecipitation";
 import type { WeatherLayoutContext } from "../layouts/AppLayout";
 import "./CityPage.css";
 
@@ -155,7 +156,11 @@ function CityWeather({
   const maximum = points.length
     ? Math.max(...points.map((point) => point.precipitationProbability))
     : null;
-  const next = points[0];
+  const daily = dailyPrecipitation(
+    weather?.hourlyForecast ?? [],
+    now,
+    weather?.timezoneOffset,
+  );
   const updated = age === 0 ? "Updated just now" : `Updated ${age} min ago`;
 
   return (
@@ -276,16 +281,15 @@ function CityWeather({
                     <WeatherIcon name="umbrella" />
                   </div>
                   <div>
-                    <h2>Next forecast · Precip chance</h2>
-                    <strong>{percent(next?.precipitationProbability)}</strong>
-                    {next && (
-                      <span className="weather-metric-time">
-                        {new Date(next.timestamp * 1000).toLocaleTimeString(
-                          [],
-                          { hour: "2-digit", minute: "2-digit" },
-                        )}
-                      </span>
-                    )}
+                    <h2>{daily.label} · Avg precip chance</h2>
+                    <strong>{percent(daily.average)}</strong>
+                    <span
+                      className="weather-metric-note"
+                      title={`Average of available forecast hours for ${daily.label.toLowerCase()}, in ${daily.hasCityTime ? "the city’s" : "your device’s"} time zone.`}
+                    >
+                      {daily.note}
+                      {!daily.hasCityTime && " · Device time"}
+                    </span>
                   </div>
                 </section>
               </aside>
