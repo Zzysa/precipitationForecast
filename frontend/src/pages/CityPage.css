@@ -54,7 +54,7 @@
 .weather-content {
   max-width: 1280px;
   margin: 0 auto;
-  padding: 34px 44px 24px;
+  padding: 34px 44px 10px;
   position: relative;
   min-height: 100%;
   display: flex;
@@ -297,17 +297,6 @@
   color: #b8cbd6;
   padding: 20px 2px;
 }
-.weather-scene-note {
-  margin-top: auto;
-  padding-top: 90px;
-  padding-bottom: 6px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 16px;
-  color: #afc2cd;
-  font-size: 12px;
-}
 .city-weather button {
   border: 1px solid rgba(208, 232, 245, 0.24);
   border-radius: 999px;
@@ -362,7 +351,7 @@
 }
 @media (max-width: 900px) {
   .weather-content {
-    padding: 25px;
+    padding: 25px 25px 10px;
   }
   .weather-overview {
     grid-template-columns: minmax(0, 1.6fr) minmax(230px, 1fr);
@@ -387,7 +376,7 @@
 }
 @media (max-width: 700px) {
   .weather-content {
-    padding: 22px 18px;
+    padding: 22px 18px 10px;
   }
   .weather-breadcrumb {
     margin-bottom: 22px;
@@ -426,10 +415,6 @@
   }
   .weather-icon-orb {
     width: 145px;
-  }
-  .weather-scene-note {
-    padding-top: 55px;
-    font-size: 11px;
   }
 }
 @media (max-width: 420px) {

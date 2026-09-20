@@ -7,6 +7,7 @@ import {
 } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { useCityWeather } from "../hooks/useCityWeather";
+import { HourlyForecastChart } from "../components/HourlyForecastChart";
 import type { WeatherLayoutContext } from "../layouts/AppLayout";
 import "./CityPage.css";
 
@@ -133,7 +134,6 @@ function CityWeather({
   const { setWeatherPhoto } = useOutletContext<WeatherLayoutContext>();
   const scene = getScene(weather?.currentWeather?.condition);
   const theme = scenes[scene];
-  const wet = scene === "rain" || scene === "storm";
   useEffect(() => {
     setWeatherPhoto(theme.photo);
     return () => setWeatherPhoto(null);
@@ -304,17 +304,9 @@ function CityWeather({
                 </button>
               )}
             </div>
+            <HourlyForecastChart weather={weather} now={now} />
           </>
         )}
-        <div className="weather-scene-note">
-          <span>
-            {wet
-              ? "A quiet moment between the raindrops."
-              : scene === "clear"
-                ? "A little sunshine for your day."
-                : "Whatever the skies bring, be ready."}
-          </span>
-        </div>
       </div>
     </div>
   );
