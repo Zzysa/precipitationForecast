@@ -4,6 +4,10 @@
 	"type": "module",
 	"main": "index.js",
 	"scripts": {
+		"build": "prisma generate && tsc -p tsconfig.build.json",
+		"start": "node dist/app.js",
+		"start:local": "node --env-file=.env dist/app.js",
+		"db:deploy": "prisma migrate deploy",
 		"typecheck": "tsc --noEmit",
 		"dev": "npm run typecheck && npx tsx --env-file=.env src/app.ts",
 		"test": "npm run test:unit && npm run test:integration",

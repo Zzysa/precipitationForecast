@@ -1,3 +1,5 @@
+const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL ?? "").trim().replace(/\/+$/, "");
+
 export class ApiError extends Error {
   status: number;
 
@@ -44,7 +46,7 @@ async function request<T>(
   let response: Response;
 
   try {
-    response = await fetch(endpoint, {
+    response = await fetch(`${API_BASE_URL}${endpoint}`, {
       ...options,
       headers: {
         "Content-Type": "application/json",
