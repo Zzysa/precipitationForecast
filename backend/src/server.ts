@@ -11,6 +11,9 @@ const app = express();
 
 app.use(cors());
 app.use(express.json());
+app.get("/api/health", (_req, res) => {
+	res.json({ status: "ok" });
+});
 app.use("/api/weather", weatherRoutes);
 app.use("/api/search-history", searchHistoryRoutes);
 app.use("/api/city-search", citySearchRoutes);
