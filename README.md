@@ -1,147 +1,209 @@
-# 🌧️ Precipitation Forecast
+<div align="center">
 
-A modern full-stack web application for tracking weather conditions and precipitation probability. Built with a robust TypeScript backend and an interactive React dashboard.
+# 🌦️ Precipitation Forecast
 
-## 🎨 Target UI Concept (In Progress)
+**A clearer picture of the weather ahead.**
 
-> **Note:** The backend architecture and API endpoints are fully implemented and covered with integration tests. The frontend dashboard is currently under active development based on the design concept below.
+Explore rain probability, temperature, and air quality in one interactive weather dashboard.
 
-<p align="center">
-  <img src="./assets/ui-concept.jpg" alt="Precipitation Forecast Dashboard Concept" width="800"/>
-</p>
+[![Live demo](https://img.shields.io/badge/Live_demo-Open_app-61c9e8?style=for-the-badge)](https://precipitation-web.onrender.com/)
+![React](https://img.shields.io/badge/React-19-149eca?style=flat-square&logo=react)
+![TypeScript](https://img.shields.io/badge/TypeScript-3178c6?style=flat-square&logo=typescript&logoColor=white)
+![PostgreSQL](https://img.shields.io/badge/PostgreSQL-4169e1?style=flat-square&logo=postgresql&logoColor=white)
 
----
+[Preview](#preview) · [Features](#features) · [Known limitations](#known-limitations) · [Run locally](#run-locally) · [API](#api)
 
-## 🚀 Tech Stack
+</div>
 
-- **Backend**: Node.js, Express 5, TypeScript, Prisma ORM, PostgreSQL, Zod, Argon2, Jose (JWT).
-- **Frontend**: React 19, Vite, Tailwind CSS v4, React Router 7, Recharts.
-- **Testing**: Vitest, Supertest, Testcontainers (PostgreSQL integration tests).
-- **External API**: OpenWeather API (Weather, Forecast, Geocoding, Air Pollution).
+## Preview
 
----
+### Weather at a glance
 
-## 📌 Features
+Current conditions, humidity, average precipitation probability, and forecast highlights against a weather-inspired background.
 
-### ✅ Completed
-- **Authentication**: User registration and login with secure HTTP-only cookies, JWT verification, and Argon2 password hashing.
-- **City Search**: Debounced city autocomplete with country flags, instant favorites toggle, and history management.
-- **Favorites & History**: Save favorite cities and automatically track recent searches per user.
-- **Weather & Precipitation API**: Aggregated endpoints for current weather, hourly precipitation probability, and air quality index (AQI).
-- **Automated Testing**: 120+ unit tests and full-suite integration tests with isolated PostgreSQL containers.
+![Weather dashboard for Cosenza](assets/screenshots/weather.png)
 
-### 🚧 In Progress / Planned
-- **Dashboard Redesign**: Glassmorphic UI matching the target concept design.
-- **Interactive Precipitation Chart**: Smooth 24-hour rain probability curve with time markers and condition icons.
-- **Live Weather Widgets**: Detailed cards for average precipitation, humidity, and peak rain chance.
-- **Localization**: Multi-language support and unit switching (°C / °F).
+### Explore the forecast
 
----
+Switch between precipitation, temperature, and air quality. Hover, focus, or tap a forecast point to see its details.
 
-## 📡 API Endpoints
+![Precipitation forecast with peak labels and weather icons](assets/screenshots/forecast.png)
 
-### Authentication
-| Method | Endpoint | Description | Auth Required |
-|---|---|---|:---:|
-| `POST` | `/api/auth/register` | Register a new user | No |
-| `POST` | `/api/auth/login` | Log in and receive session cookie | No |
-| `POST` | `/api/auth/logout` | Clear session cookie | Yes |
-| `GET` | `/api/auth/me` | Get current user profile | Yes |
+<details>
+<summary>More screens: city search and sign in</summary>
 
-### City Search
-| Method | Endpoint | Description | Auth Required |
-|---|---|---|:---:|
-| `GET` | `/api/city-search?city={name}&country={code}` | Search cities with OpenWeather & user data | Optional |
+### City search
 
-### Weather
-| Method | Endpoint | Description | Auth Required |
-|---|---|---|:---:|
-| `GET` | `/api/weather/:city` | Current weather, 24h forecast, AQI | Optional |
+![City search results for London](assets/screenshots/search.png)
 
-### Favorites
-| Method | Endpoint | Description | Auth Required |
-|---|---|---|:---:|
-| `GET` | `/api/favorites` | Get user's favorite cities | Yes |
-| `POST` | `/api/favorites` | Add city to favorites | Yes |
-| `DELETE` | `/api/favorites/:cityId` | Remove city from favorites | Yes |
+### Sign in
 
-### Search History
-| Method | Endpoint | Description | Auth Required |
-|---|---|---|:---:|
-| `GET` | `/api/search-history` | Get user's search history | Yes |
-| `DELETE` | `/api/search-history/:cityId` | Remove city from search history | Yes |
+![Sign-in screen](assets/screenshots/sign-in.png)
 
----
+</details>
 
-## 🛠️ Getting Started
+Screenshots show the deployed application; weather values change over time.
 
-### Prerequisites
-- Node.js (v20 or newer)
-- PostgreSQL (local instance or Docker container)
-- OpenWeather API Key ([Get one here](https://openweathermap.org/api))
+## Try it
 
----
+**[Open the live application →](https://precipitation-web.onrender.com/)**
 
-### 1. Backend Setup
+Search for a city and open its forecast. Weather browsing works without an account; register to save favorite cities and keep your search history.
 
-1. Navigate to the backend directory:
-   ```bash
-   cd backend
-   ```
+The demo uses free hosting. After a period of inactivity, the API may need around a minute to wake up on the first request.
 
-2. Install dependencies:
-   ```bash
-   npm install
-   ```
+## Features
 
-3. Create a `.env` file in `backend/`:
-   ```env
-   PORT=3000
-   DATABASE_URL="postgresql://postgres:postgres@localhost:5432/precipitation"
-   JWT_SECRET="your-secure-secret"
-   WEATHER_API_KEY="your-openweather-api-key"
-   ```
+- **City search** with suggestions, country flags, and location details.
+- **Weather overview** with current temperature, humidity, and precipitation highlights.
+- **Interactive charts** for precipitation probability, temperature, and the OpenWeather air quality index.
+- **Readable forecast labels** placed at selected peaks and turning points, with details available for every data point.
+- **Weather-aware presentation** with condition icons, atmospheric backgrounds, and day/night variations.
+- **Daily precipitation summary** based on available remaining forecast hours, falling back to the next available day.
+- **Personal favorites and history** for registered users.
+- **Responsive layout** with horizontally scrollable charts on smaller screens.
 
-4. Run Prisma database migrations and seed demo data:
-   ```bash
-   npx prisma migrate dev
-   npx prisma db seed
-   ```
-   > Default demo account: `demo` / `demo-password-123`
+Forecast resolution depends on the OpenWeather plan: hourly forecasts require an eligible subscription; the free fallback uses three-hour forecast intervals. Chart times follow the viewer's device time zone.
 
-5. Start backend development server:
-   ```bash
-   npm run dev
-   ```
-   Server runs on `http://localhost:3000`.
+## Built with
 
-6. Run tests:
-   ```bash
-   npm test
-   ```
+- **Frontend:** React 19, TypeScript, Vite, React Router, Tailwind CSS, and custom CSS.
+- **Charts:** custom SVG paths and interaction logic, without a charting library.
+- **Backend:** Node.js, Express 5, TypeScript, Zod, and Prisma ORM.
+- **Authentication:** Argon2 password hashing and JWT bearer tokens. The frontend stores the access token in localStorage.
+- **Database:** PostgreSQL.
+- **Tests:** Vitest, Supertest, and Testcontainers.
+- **Live deployment:** Render for the frontend and API, Neon for PostgreSQL, and OpenWeather for weather data.
 
----
+## Known limitations
 
-### 2. Frontend Setup
+The web application is live and its core flows are available. Mobile layout polish is still in progress.
 
-1. Navigate to the frontend directory:
-   ```bash
-   cd frontend
-   ```
+- **Portrait mobile search:** the search field can become too narrow on phone screens. This is a known layout issue planned for a separate fix.
+- **Cold starts:** the first API request after inactivity can be slow on the free hosting plan.
+- **Forecast availability:** hourly data depends on the OpenWeather subscription; the free fallback uses three-hour intervals.
 
-2. Install dependencies:
-   ```bash
-   npm install
-   ```
+Found a problem? [Open an issue](https://github.com/Zzysa/precipitationForecast/issues) with steps to reproduce, expected and actual behavior, and your browser and screen size. Screenshots are welcome; omit passwords, tokens, and other private information.
 
-3. Start frontend development server:
-   ```bash
-   npm run dev
-   ```
-   Application runs on `http://localhost:5173` (requests to `/api` are automatically proxied to port 3000).
+## Run locally
 
----
+### Requirements
 
-## 📄 License
+- Node.js 22.12+ or Node.js 24 LTS.
+- PostgreSQL, or Docker for the included local database.
+- An OpenWeather API key.
 
-ISC License.
+### Backend
+
+From the repository root:
+
+```bash
+cd backend
+npm ci
+```
+
+Create `backend/.env` with your local settings:
+
+```dotenv
+DATABASE_URL="postgresql://postgres:postgres@localhost:5432/precipitation"
+JWT_SECRET="replace-with-a-random-secret"
+WEATHER_API_KEY="your-openweather-api-key"
+FORECAST_MODE=3h
+PORT=3000
+```
+
+Use `FORECAST_MODE=hourly` only if your API subscription supports hourly forecasts.
+
+If using the included Docker database, start it from `backend`:
+
+```bash
+docker compose up -d
+```
+
+Apply existing migrations to your local database and start the API:
+
+```bash
+npm run db:deploy
+npm run dev
+```
+
+The API runs at `http://localhost:3000`. Use your local database URL for development; a hosted database is not required.
+
+### Frontend
+
+In another terminal, from the repository root:
+
+```bash
+cd frontend
+npm ci
+npm run dev
+```
+
+Open `http://localhost:5173`. Vite forwards `/api` requests to the local backend. Leave `VITE_API_BASE_URL` unset for this setup; set it to a backend origin when building a frontend hosted separately.
+
+### Checks
+
+From `backend`:
+
+```bash
+npm run typecheck
+npm run test:unit
+npm run test:integration
+```
+
+Integration tests require Docker and use an isolated PostgreSQL container.
+
+From `frontend`:
+
+```bash
+npm run lint
+npm run build
+```
+
+## API
+
+Public or optional-auth endpoints:
+
+```text
+GET  /api/health
+GET  /api/city-search?city=London&country=GB
+GET  /api/weather/:city
+POST /api/auth/register
+POST /api/auth/login
+```
+
+Endpoints requiring `Authorization: Bearer <token>`:
+
+```text
+GET    /api/auth/me
+GET    /api/favorites
+POST   /api/favorites
+DELETE /api/favorites/:cityId
+GET    /api/search-history
+DELETE /api/search-history/:cityId
+```
+
+Signing out clears the token on the client. Authenticated weather requests also update the user's search history.
+
+## Project structure
+
+```text
+frontend/src/
+  pages/          Home, authentication, and city weather screens
+  components/     City search, forecast charts, and weather icons
+  api/            API client and response types
+  context/        Authentication state
+backend/
+  src/            Routes, controllers, services, schemas, and mappers
+  prisma/         Database schema and migrations
+assets/screenshots/
+                  Screenshots used in this README
+```
+
+## Credits
+
+Weather, air quality, and geocoding data are provided by [OpenWeather](https://openweathermap.org/).
+
+## License
+
+ISC, as declared in the backend package metadata.
