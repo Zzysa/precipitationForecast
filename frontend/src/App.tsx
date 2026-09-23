@@ -18,7 +18,7 @@ function UserNav() {
     return (
       <Link
         to="/login"
-        className="inline-flex items-center justify-center text-xs font-medium text-text-muted hover:text-accent-blue bg-bg-card hover:bg-bg-card-hover border border-border-light hover:border-accent-blue/50 px-3 py-1.5 rounded-lg transition-all"
+        className="inline-flex items-center justify-center text-base sm:text-xs font-medium text-text-muted hover:text-accent-blue bg-bg-card hover:bg-bg-card-hover border border-border-light hover:border-accent-blue/50 h-11 sm:h-8 px-3 whitespace-nowrap rounded-lg transition-all"
       >
         Sign In
       </Link>
@@ -33,7 +33,7 @@ function UserNav() {
       <button
         type="button"
         onClick={logout}
-        className="inline-flex items-center justify-center text-xs text-text-muted hover:text-accent-red px-2.5 py-1.5 rounded-lg border border-border-default hover:border-accent-red/30 transition-all cursor-pointer"
+        className="inline-flex items-center justify-center text-base sm:text-xs text-text-muted hover:text-accent-red h-11 sm:h-8 px-2.5 whitespace-nowrap rounded-lg border border-border-default hover:border-accent-red/30 transition-all cursor-pointer"
       >
         Sign Out
       </button>

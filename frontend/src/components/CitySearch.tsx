@@ -65,7 +65,7 @@ function SearchTooltip() {
 
   return (
     <div
-      className="relative flex items-center"
+      className="static sm:relative shrink-0 flex items-center"
       onMouseEnter={() => setOpen(true)}
       onMouseLeave={() => setOpen(false)}
     >
@@ -73,7 +73,7 @@ function SearchTooltip() {
         type="button"
         onFocus={() => setOpen(true)}
         onBlur={() => setOpen(false)}
-        className="w-8 h-8 rounded-lg border border-border-light bg-bg-card text-text-muted hover:text-accent-blue hover:border-accent-blue/50 hover:bg-bg-card-hover text-xs font-semibold flex items-center justify-center transition-all cursor-pointer"
+        className="w-11 h-11 sm:w-8 sm:h-8 rounded-lg border border-border-light bg-bg-card text-text-muted hover:text-accent-blue hover:border-accent-blue/50 hover:bg-bg-card-hover text-base sm:text-xs font-semibold flex items-center justify-center transition-all cursor-pointer"
         aria-label="Search hint"
       >
         ?
@@ -82,7 +82,7 @@ function SearchTooltip() {
       {open && (
         <div
           role="tooltip"
-          className="absolute right-0 top-10 z-50 w-64 p-3.5 rounded-xl bg-[#0f172a] border border-border-light shadow-2xl shadow-black/80 text-xs text-text-secondary leading-relaxed pointer-events-none select-none"
+          className="absolute right-3 top-full mt-1.5 sm:right-0 sm:top-10 sm:mt-0 z-50 w-64 max-w-[calc(100vw-1.5rem)] p-3.5 rounded-xl bg-[#0f172a] border border-border-light shadow-2xl shadow-black/80 text-xs text-text-secondary leading-relaxed pointer-events-none select-none"
         >
           <p className="font-semibold text-text-primary mb-1 text-xs">
             Can't find your city?
@@ -133,7 +133,7 @@ function ResultItem({
             </span>
           )}
         </div>
-        <div className="text-[10px] text-text-muted">
+        <div className="text-[10px] text-text-muted break-words">
           {city.state ? `${city.state}, ` : ""}{city.country}
         </div>
       </div>
@@ -376,9 +376,9 @@ export function CitySearch() {
   };
 
   return (
-    <div ref={containerRef} className="relative w-full max-w-sm mx-auto">
+    <div ref={containerRef} className="static sm:relative w-full min-w-0 sm:max-w-sm mx-auto">
       <div className="flex items-center gap-2">
-        <div className="relative flex-1 group/search">
+        <div className="relative min-w-0 flex-1 group/search">
           <svg
             className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-text-muted pointer-events-none transition-colors group-hover/search:text-accent-blue group-focus-within/search:text-accent-blue"
             viewBox="0 0 24 24"
@@ -394,6 +394,7 @@ export function CitySearch() {
 
           <input
             id="city-search-input"
+            aria-label="Search city"
             type="text"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
@@ -401,7 +402,7 @@ export function CitySearch() {
             onKeyDown={handleKeyDown}
             placeholder="Search city…"
             autoComplete="off"
-            className="w-full h-8 pl-8 pr-8 bg-bg-card border border-border-light hover:border-accent-blue/50 hover:bg-bg-card-hover focus:border-accent-blue/50 focus:bg-bg-card-hover focus:ring-0 rounded-lg text-xs text-text-primary placeholder:text-text-muted outline-none transition-all"
+            className="w-full h-11 sm:h-8 pl-8 pr-8 bg-bg-card border border-border-light hover:border-accent-blue/50 hover:bg-bg-card-hover focus:border-accent-blue/50 focus:bg-bg-card-hover focus:ring-0 rounded-lg text-base sm:text-xs text-text-primary placeholder:text-text-muted outline-none transition-all"
           />
 
           {query.length > 0 && !isLoading && (
@@ -435,7 +436,7 @@ export function CitySearch() {
       </div>
 
       {isOpen && results.length > 0 && (
-        <div className="absolute top-full mt-1.5 left-0 right-0 z-50 rounded-xl border border-border-light bg-[#0f172a] shadow-2xl shadow-black/80 overflow-hidden divide-y divide-border-light/20">
+        <div className="absolute top-full mt-1.5 left-3 right-3 sm:left-0 sm:right-0 z-50 max-h-[50dvh] overflow-y-auto overscroll-contain rounded-xl border border-border-light bg-[#0f172a] shadow-2xl shadow-black/80 divide-y divide-border-light/20">
           {results.map((city, i) => (
             <ResultItem
               key={`${city.name}-${city.country}-${city.state ?? ""}-${city.lat}-${city.lon}-${i}`}

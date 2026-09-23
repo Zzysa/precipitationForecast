@@ -53,12 +53,12 @@ function AppLayout({ centerSlot, rightSlot, children }: AppLayoutProps) {
       )}
 
       <header
-        style={{ height: "64px", minHeight: "64px", maxHeight: "64px" }}
-        className="app-glass-bar h-16 relative z-10 shrink-0 flex items-center gap-8 px-8 border-b border-border-default backdrop-blur-md bg-bg-glass"
+        className="app-glass-bar h-16 relative z-10 shrink-0 flex items-center gap-3 sm:gap-8 px-3 sm:px-8 border-b border-border-default backdrop-blur-md bg-bg-glass"
       >
         <Link
           to="/"
-          className="flex items-center hover:opacity-80 transition-opacity"
+          aria-label="Home"
+          className="shrink-0 flex items-center hover:opacity-80 transition-opacity"
         >
           <svg
             className="w-6 h-6 text-accent-blue"
@@ -73,9 +73,13 @@ function AppLayout({ centerSlot, rightSlot, children }: AppLayoutProps) {
           </svg>
         </Link>
 
-        <div className="flex-1">{!isLoginPage && centerSlot}</div>
+        {!isLoginPage && centerSlot && (
+          <div className="min-w-0 flex-1">
+            {centerSlot}
+          </div>
+        )}
 
-        <div className="flex items-center justify-end min-w-[140px] h-8">
+        <div className="ml-auto shrink-0 flex items-center justify-end sm:min-w-[140px] h-11 sm:h-8">
           {rightSlot}
         </div>
       </header>
