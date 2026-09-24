@@ -8,7 +8,7 @@ import {
 import { useAuth } from "../context/AuthContext";
 import { useCityWeather } from "../hooks/useCityWeather";
 import { HourlyForecastChart } from "../components/HourlyForecastChart";
-import { dailyPrecipitation } from "../components/dailyPrecipitation";
+import { currentAirQuality } from "../components/airQuality";
 import type { WeatherLayoutContext } from "../layouts/AppLayout";
 import "./CityPage.css";
 
@@ -63,6 +63,7 @@ function WeatherIcon({
     mist: "cloud-fog.svg",
     umbrella: "umbrella.svg",
     thermometer: "thermometer.svg",
+    wind: "wind.svg",
   };
   return (
     <span
@@ -156,11 +157,7 @@ function CityWeather({
   const maximum = points.length
     ? Math.max(...points.map((point) => point.precipitationProbability))
     : null;
-  const daily = dailyPrecipitation(
-    weather?.hourlyForecast ?? [],
-    now,
-    weather?.timezoneOffset,
-  );
+  const airQuality = currentAirQuality(weather?.hourlyAirPollution, now);
   const updated = age === 0 ? "Updated just now" : `Updated ${age} min ago`;
 
   return (
@@ -278,17 +275,19 @@ function CityWeather({
                 </section>
                 <section className="weather-glass weather-metric">
                   <div className="weather-small-icon">
-                    <WeatherIcon name="umbrella" />
+                    <WeatherIcon name="wind" />
                   </div>
                   <div>
-                    <h2>{daily.label} · Avg precip chance</h2>
-                    <strong>{percent(daily.average)}</strong>
+                    <h2>Air quality · This hour</h2>
+                    <strong>
+                      {airQuality?.aqi ?? "—"}
+                      {airQuality && <small>/ 5 · {airQuality.label}</small>}
+                    </strong>
                     <span
                       className="weather-metric-note"
-                      title={`Average of available forecast hours for ${daily.label.toLowerCase()}, in ${daily.hasCityTime ? "the city’s" : "your device’s"} time zone.`}
+                      title="OpenWeather air quality index: 1 Good, 2 Fair, 3 Moderate, 4 Poor, 5 Very poor."
                     >
-                      {daily.note}
-                      {!daily.hasCityTime && " · Device time"}
+                      {airQuality ? "OpenWeather AQI · Hourly forecast" : "Data unavailable"}
                     </span>
                   </div>
                 </section>

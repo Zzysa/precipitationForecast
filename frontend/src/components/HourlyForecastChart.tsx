@@ -6,6 +6,7 @@ import {
   forecastTimeIndices,
 } from "./forecastGeometry";
 import { ForecastWeatherIcon } from "./ForecastWeatherIcon";
+import { airLevels } from "./airQuality";
 import "./HourlyForecastChart.css";
 
 type Metric = "precipitation" | "temperature" | "air";
@@ -16,13 +17,6 @@ const WIDTH = 1000;
 const HEIGHT = 246;
 const TOP = 100;
 const BOTTOM = 224;
-const airLevels = [
-  { label: "Good", color: "#8de0bd" },
-  { label: "Fair", color: "#c6df91" },
-  { label: "Moderate", color: "#f2ce83" },
-  { label: "Poor", color: "#f1a17d" },
-  { label: "Very poor", color: "#e79aac" },
-];
 const metrics: Record<Metric, { label: string; title: string }> = {
   precipitation: {
     label: "Precipitation",
