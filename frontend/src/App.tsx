@@ -33,7 +33,7 @@ function UserNav() {
       <button
         type="button"
         onClick={logout}
-        className="inline-flex items-center justify-center text-base sm:text-xs text-text-muted hover:text-accent-red h-11 sm:h-8 px-2.5 whitespace-nowrap rounded-lg border border-border-default hover:border-accent-red/30 transition-all cursor-pointer"
+        className="inline-flex items-center justify-center text-base sm:text-xs text-text-muted hover:text-accent-red bg-bg-card hover:bg-bg-card-hover h-11 sm:h-8 px-2.5 whitespace-nowrap rounded-lg border border-border-light hover:border-accent-red/30 transition-all cursor-pointer"
       >
         Sign Out
       </button>
