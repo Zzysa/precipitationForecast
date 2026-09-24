@@ -105,16 +105,28 @@ const calculateAvgTempByPeriod = (
 	period: DayPeriod,
 ) => {
 	const { sunrise, sunset } = weather.sys;
+	const secondsPerDay = 24 * 60 * 60;
+	const start = forecast.list.find((point) => Number.isFinite(point.dt))?.dt;
+	if (start === undefined) return null;
 
 	const tempHourly = forecast.list
 		.slice(0, FORECAST_WINDOW)
-		.map((el) => ({ dt: el.dt, temp: el.main.temp }))
+		.map((el) => ({ dt: el.dt, temp: el.main.temp, icon: el.weather?.[0]?.icon }))
 		.filter((el) => {
-			if (typeof el.dt !== "number" || typeof el.temp !== "number") {
+			if (!Number.isFinite(el.dt) || !Number.isFinite(el.temp) ||
+				el.dt < start || el.dt >= start + secondsPerDay) {
 				return false;
 			}
 
-			const isDay = el.dt >= sunrise && el.dt < sunset;
+			const phase = el.icon?.slice(-1);
+			// Forecast icons identify daylight for each date, including tomorrow.
+			// Older cached responses may omit icons; repeat the solar window then.
+			const sinceSunrise = ((el.dt - sunrise) % secondsPerDay + secondsPerDay) % secondsPerDay;
+			if (phase !== "d" && phase !== "n" &&
+				(!Number.isFinite(sunrise) || !Number.isFinite(sunset) || sunset <= sunrise)) {
+				return false;
+			}
+			const isDay = phase === "d" ? true : phase === "n" ? false : sinceSunrise < sunset - sunrise;
 			return period === "day" ? isDay : !isDay;
 		});
 

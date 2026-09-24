@@ -123,6 +123,34 @@ describe("calculateAvgAirQuality", () => {
 });
 
 describe("mapToCurrentWeather", () => {
+	it("keeps tomorrow's daytime separate from night and limits averages to 24 hours", () => {
+		const start = 1710000000;
+		const data = { ...forecast, list: [
+			{ dt: start, main: { temp: 8 }, pop: 0, weather: [{ main: "Clear", icon: "01n" }] },
+			{ dt: start + 12 * 3600, main: { temp: 20 }, pop: 0, weather: [{ main: "Clear", icon: "01d" }] },
+			{ dt: start + 24 * 3600, main: { temp: 100 }, pop: 0, weather: [{ main: "Clear", icon: "01d" }] },
+		] };
+		expect(calculateAvgTempByPeriod(currentWeather, data, "day")).toBe(20);
+		expect(calculateAvgTempByPeriod(currentWeather, data, "night")).toBe(8);
+	});
+
+	it("ignores invalid temperatures and returns null for a missing period", () => {
+		const data = { ...forecast, list: [
+			{ dt: 1710000000, main: { temp: NaN }, pop: 0, weather: [{ main: "Clear", icon: "01d" }] },
+			{ dt: 1710003600, main: { temp: -5 }, pop: 0, weather: [{ main: "Clear", icon: "01n" }] },
+		] };
+		expect(calculateAvgTempByPeriod(currentWeather, data, "day")).toBeNull();
+		expect(calculateAvgTempByPeriod(currentWeather, data, "night")).toBe(-5);
+	});
+
+	it("uses the solar window on the next day when forecast icons are missing", () => {
+		const data = { ...forecast, list: [
+			{ dt: 1710000024, main: { temp: 8 }, pop: 0 },
+			{ dt: 1710000010 + 86400, main: { temp: 20 }, pop: 0 },
+		] };
+		expect(calculateAvgTempByPeriod(currentWeather, data, "day")).toBe(20);
+		expect(calculateAvgTempByPeriod(currentWeather, data, "night")).toBe(8);
+	});
 	it("returns null when weather is null", () => {
 		expect(mapToCurrentWeather(null, forecast)).toBe(null);
 	});

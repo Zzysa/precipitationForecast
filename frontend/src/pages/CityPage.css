@@ -100,6 +100,8 @@
   border-radius: 26px;
 }
 .weather-hero {
+  display: flex;
+  flex-direction: column;
   padding: 30px 32px 22px;
   min-width: 0;
 }
@@ -131,6 +133,7 @@
   box-shadow: 0 0 8px #bb893e;
 }
 .weather-hero-main {
+  flex: 1;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -289,6 +292,28 @@
   color: #aec6d3;
   margin-top: 6px;
 }
+.weather-temperature-content {
+  flex: 1;
+  min-width: 0;
+}
+.weather-temperature-row {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+  margin: 7px 0 0;
+}
+.weather-temperature-row dt {
+  color: #b8cdd8;
+  font-size: 10px;
+  margin-bottom: 3px;
+}
+.weather-temperature-row dd {
+  margin: 0;
+  white-space: nowrap;
+}
+.weather-temperature-row strong {
+  font-size: 22px;
+}
 .weather-status {
   display: flex;
   justify-content: space-between;
@@ -386,7 +411,7 @@
     grid-template-columns: 1fr;
   }
   .weather-metrics {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-columns: repeat(2, minmax(0, 1fr));
     grid-template-rows: auto;
     gap: 10px;
   }
@@ -403,6 +428,16 @@
   }
   .weather-metric strong {
     font-size: 24px;
+  }
+  .weather-temperature {
+    grid-column: 1 / -1;
+    grid-row: 2;
+    flex-direction: row;
+    align-items: center;
+    gap: 14px;
+  }
+  .weather-temperature h2 {
+    min-height: 0;
   }
   .weather-hero-main {
     padding: 26px 0;

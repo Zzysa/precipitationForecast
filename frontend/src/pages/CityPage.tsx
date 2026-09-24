@@ -257,20 +257,30 @@ function CityWeather({
                     <strong>{percent(maximum)}</strong>
                   </div>
                 </section>
-                <section className="weather-glass weather-metric weather-metric-dark">
+                <section className="weather-glass weather-metric weather-metric-dark weather-temperature">
                   <div className="weather-small-icon">
                     <WeatherIcon name="thermometer" />
                   </div>
-                  <div>
-                    <h2>Current temperature</h2>
-                    <strong>
-                      {weather.currentWeather?.temp == null
-                        ? "—"
-                        : `${Math.round(weather.currentWeather.temp)}°`}
-                      <small>
-                        {weather.currentWeather?.temp == null ? "" : "C"}
-                      </small>
-                    </strong>
+                  <div className="weather-temperature-content">
+                    <h2>Temperature · °C</h2>
+                    <dl className="weather-temperature-row" title="Now: current temperature. Day and Night: forecast averages.">
+                      {[
+                        { label: "Now", value: weather.currentWeather?.temp },
+                        { label: "Day", value: weather.currentWeather?.tempDay },
+                        { label: "Night", value: weather.currentWeather?.tempNight },
+                      ].map(({ label, value }) => (
+                        <div key={label}>
+                          <dt>{label}</dt>
+                          <dd>
+                            <strong>
+                              {value == null || !Number.isFinite(value)
+                                ? "—"
+                                : `${Math.round(value)}°`}
+                            </strong>
+                          </dd>
+                        </div>
+                      ))}
+                    </dl>
                   </div>
                 </section>
                 <section className="weather-glass weather-metric">
@@ -278,17 +288,14 @@ function CityWeather({
                     <WeatherIcon name="wind" />
                   </div>
                   <div>
-                    <h2>Air quality · This hour</h2>
+                    <h2 title="OpenWeather hourly AQI: 1 Good, 2 Fair, 3 Moderate, 4 Poor, 5 Very poor.">Air quality · This hour</h2>
                     <strong>
                       {airQuality?.aqi ?? "—"}
                       {airQuality && <small>/ 5 · {airQuality.label}</small>}
                     </strong>
-                    <span
-                      className="weather-metric-note"
-                      title="OpenWeather air quality index: 1 Good, 2 Fair, 3 Moderate, 4 Poor, 5 Very poor."
-                    >
-                      {airQuality ? "OpenWeather AQI · Hourly forecast" : "Data unavailable"}
-                    </span>
+                    {!airQuality && (
+                      <span className="weather-metric-note">Data unavailable</span>
+                    )}
                   </div>
                 </section>
               </aside>
